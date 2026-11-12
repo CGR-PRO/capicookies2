@@ -1,0 +1,84 @@
+<template>
+  <style>
+    #prices { position:absolute; inset:0; pointer-events:none; }
+    #prices .price { position:absolute; left:0; right:0; top:250px; height:360px;
+      display:flex; align-items:center; justify-content:center; overflow:visible; }
+    #prices .card { background:#fff; border-radius:34px; padding:26px 54px 30px;
+      border:7px solid #111; box-shadow:0 14px 0 #111, 0 24px 50px rgba(0,0,0,.45);
+      text-align:center; font-family:"Montserrat"; }
+    #prices .pl { font-weight:800; font-size:34px; color:#444; letter-spacing:.06em; margin-bottom:2px; }
+    #prices .eur { font-weight:900; font-size:116px; line-height:1; color:#0050AA; letter-spacing:-0.02em; }
+    #prices .brl { display:inline-block; margin-top:14px; background:#009C3B; color:#fff;
+      font-weight:900; font-size:56px; padding:8px 28px 10px; border-radius:999px; border:5px solid #111; }
+  </style>
+  <div id="prices" data-composition-id="prices" data-width="1080" data-height="1920" data-layout-allow-overflow>
+        <div class="price clip" id="pc0" data-start="4.950" data-duration="2.800"><div class="card" id="pc0-c" style="--r:-3deg"><div class="pl">MACARON</div><div class="eur">€ 4,49</div><div class="brl" id="pc0-b">≈ R$ 27,84</div></div></div>
+    <div class="price clip" id="pc1" data-start="21.530" data-duration="1.370"><div class="card" id="pc1-c" style="--r:3deg"><div class="pl">CARNE MOÍDA</div><div class="eur">€ 4,19</div><div class="brl" id="pc1-b">≈ R$ 25,98</div></div></div>
+    <div class="price clip" id="pc2" data-start="22.950" data-duration="2.800"><div class="card" id="pc2-c" style="--r:-3deg"><div class="pl">COM LIDL PLUS</div><div class="eur">€ 3,69</div><div class="brl" id="pc2-b">≈ R$ 22,88</div></div></div>
+    <div class="price clip" id="pc3" data-start="33.970" data-duration="2.800"><div class="card" id="pc3-c" style="--r:3deg"><div class="pl">ÓLEO</div><div class="eur">€ 2,50</div><div class="brl" id="pc3-b">≈ R$ 15,50</div></div></div>
+    <div class="price clip" id="pc4" data-start="43.860" data-duration="2.800"><div class="card" id="pc4-c" style="--r:-3deg"><div class="pl">ORÉGANO</div><div class="eur">€ 0,69</div><div class="brl" id="pc4-b">≈ R$ 4,28</div></div></div>
+    <div class="price clip" id="pc5" data-start="50.980" data-duration="2.800"><div class="card" id="pc5-c" style="--r:3deg"><div class="pl">MOLHO BOLONHESA</div><div class="eur">€ 3,49</div><div class="brl" id="pc5-b">≈ R$ 21,64</div></div></div>
+    <div class="price clip" id="pc6" data-start="56.320" data-duration="2.290"><div class="card" id="pc6-c" style="--r:-3deg"><div class="pl">MACARRÃO</div><div class="eur">€ 0,59</div><div class="brl" id="pc6-b">≈ R$ 3,66</div></div></div>
+    <div class="price clip" id="pc7" data-start="58.660" data-duration="2.800"><div class="card" id="pc7-c" style="--r:3deg"><div class="pl">PÃO DE FORMA</div><div class="eur">€ 0,99</div><div class="brl" id="pc7-b">≈ R$ 6,14</div></div></div>
+    <div class="price clip" id="pc8" data-start="79.160" data-duration="2.800"><div class="card" id="pc8-c" style="--r:-3deg"><div class="pl">CEBOLA 2 KG</div><div class="eur">€ 1,89</div><div class="brl" id="pc8-b">≈ R$ 11,72</div></div></div>
+    <div class="price clip" id="pc9" data-start="83.120" data-duration="2.800"><div class="card" id="pc9-c" style="--r:3deg"><div class="pl">ALHO</div><div class="eur">€ 1,19</div><div class="brl" id="pc9-b">≈ R$ 7,38</div></div></div>
+    <div class="price clip" id="pc10" data-start="86.350" data-duration="2.800"><div class="card" id="pc10-c" style="--r:-3deg"><div class="pl">18 OVOS</div><div class="eur">€ 6,29</div><div class="brl" id="pc10-b">≈ R$ 39,00</div></div></div>
+    <div class="price clip" id="pc11" data-start="98.950" data-duration="2.800"><div class="card" id="pc11-c" style="--r:3deg"><div class="pl">SUCO DE LARANJA</div><div class="eur">€ 2,75</div><div class="brl" id="pc11-b">≈ R$ 17,05</div></div></div>
+    <div class="price clip" id="pc12" data-start="105.350" data-duration="2.800"><div class="card" id="pc12-c" style="--r:-3deg"><div class="pl">SABÃO EM CÁPSULA</div><div class="eur">€ 5,39</div><div class="brl" id="pc12-b">≈ R$ 33,42</div></div></div>
+    <div class="price clip" id="pc13" data-start="140.250" data-duration="2.800"><div class="card" id="pc13-c" style="--r:3deg"><div class="pl">COTTON BUDS</div><div class="eur">€ 0,99</div><div class="brl" id="pc13-b">≈ R$ 6,14</div></div></div>
+    <div class="price clip" id="pc14" data-start="157.740" data-duration="1.900"><div class="card" id="pc14-c" style="--r:-3deg"><div class="pl">ATÉ AGORA</div><div class="eur">€ 17,00</div><div class="brl" id="pc14-b">≈ R$ 105,40</div></div></div>
+    <div class="price clip" id="pc15" data-start="160.740" data-duration="4.900"><div class="card" id="pc15-c" style="--r:3deg"><div class="pl">TOTAL DA COMPRA</div><div class="eur">€ 27,06</div><div class="brl" id="pc15-b">≈ R$ 167,77</div></div></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+        tl.fromTo("#pc0-c",{scale:0.3,rotation:-12,opacity:0},{scale:1,rotation:-3,opacity:1,duration:0.32,ease:"back.out(2.2)"},4.950);
+    tl.fromTo("#pc0-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},5.230);
+    tl.to("#pc0-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},7.570);
+    tl.fromTo("#pc1-c",{scale:0.3,rotation:12,opacity:0},{scale:1,rotation:3,opacity:1,duration:0.32,ease:"back.out(2.2)"},21.530);
+    tl.fromTo("#pc1-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},21.810);
+    tl.to("#pc1-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},22.720);
+    tl.fromTo("#pc2-c",{scale:0.3,rotation:-12,opacity:0},{scale:1,rotation:-3,opacity:1,duration:0.32,ease:"back.out(2.2)"},22.950);
+    tl.fromTo("#pc2-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},23.230);
+    tl.to("#pc2-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},25.570);
+    tl.fromTo("#pc3-c",{scale:0.3,rotation:12,opacity:0},{scale:1,rotation:3,opacity:1,duration:0.32,ease:"back.out(2.2)"},33.970);
+    tl.fromTo("#pc3-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},34.250);
+    tl.to("#pc3-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},36.590);
+    tl.fromTo("#pc4-c",{scale:0.3,rotation:-12,opacity:0},{scale:1,rotation:-3,opacity:1,duration:0.32,ease:"back.out(2.2)"},43.860);
+    tl.fromTo("#pc4-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},44.140);
+    tl.to("#pc4-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},46.480);
+    tl.fromTo("#pc5-c",{scale:0.3,rotation:12,opacity:0},{scale:1,rotation:3,opacity:1,duration:0.32,ease:"back.out(2.2)"},50.980);
+    tl.fromTo("#pc5-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},51.260);
+    tl.to("#pc5-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},53.600);
+    tl.fromTo("#pc6-c",{scale:0.3,rotation:-12,opacity:0},{scale:1,rotation:-3,opacity:1,duration:0.32,ease:"back.out(2.2)"},56.320);
+    tl.fromTo("#pc6-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},56.600);
+    tl.to("#pc6-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},58.430);
+    tl.fromTo("#pc7-c",{scale:0.3,rotation:12,opacity:0},{scale:1,rotation:3,opacity:1,duration:0.32,ease:"back.out(2.2)"},58.660);
+    tl.fromTo("#pc7-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},58.940);
+    tl.to("#pc7-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},61.280);
+    tl.fromTo("#pc8-c",{scale:0.3,rotation:-12,opacity:0},{scale:1,rotation:-3,opacity:1,duration:0.32,ease:"back.out(2.2)"},79.160);
+    tl.fromTo("#pc8-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},79.440);
+    tl.to("#pc8-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},81.780);
+    tl.fromTo("#pc9-c",{scale:0.3,rotation:12,opacity:0},{scale:1,rotation:3,opacity:1,duration:0.32,ease:"back.out(2.2)"},83.120);
+    tl.fromTo("#pc9-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},83.400);
+    tl.to("#pc9-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},85.740);
+    tl.fromTo("#pc10-c",{scale:0.3,rotation:-12,opacity:0},{scale:1,rotation:-3,opacity:1,duration:0.32,ease:"back.out(2.2)"},86.350);
+    tl.fromTo("#pc10-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},86.630);
+    tl.to("#pc10-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},88.970);
+    tl.fromTo("#pc11-c",{scale:0.3,rotation:12,opacity:0},{scale:1,rotation:3,opacity:1,duration:0.32,ease:"back.out(2.2)"},98.950);
+    tl.fromTo("#pc11-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},99.230);
+    tl.to("#pc11-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},101.570);
+    tl.fromTo("#pc12-c",{scale:0.3,rotation:-12,opacity:0},{scale:1,rotation:-3,opacity:1,duration:0.32,ease:"back.out(2.2)"},105.350);
+    tl.fromTo("#pc12-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},105.630);
+    tl.to("#pc12-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},107.970);
+    tl.fromTo("#pc13-c",{scale:0.3,rotation:12,opacity:0},{scale:1,rotation:3,opacity:1,duration:0.32,ease:"back.out(2.2)"},140.250);
+    tl.fromTo("#pc13-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},140.530);
+    tl.to("#pc13-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},142.870);
+    tl.fromTo("#pc14-c",{scale:0.3,rotation:-12,opacity:0},{scale:1,rotation:-3,opacity:1,duration:0.32,ease:"back.out(2.2)"},157.740);
+    tl.fromTo("#pc14-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},158.020);
+    tl.to("#pc14-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},159.460);
+    tl.fromTo("#pc15-c",{scale:0.3,rotation:12,opacity:0},{scale:1,rotation:3,opacity:1,duration:0.32,ease:"back.out(2.2)"},160.740);
+    tl.fromTo("#pc15-b",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.22,ease:"back.out(3)"},161.020);
+    tl.to("#pc15-c",{scale:0.6,opacity:0,duration:0.16,ease:"power2.in"},165.460);
+    window.__timelines["prices"] = tl;
+  </script>
+</template>

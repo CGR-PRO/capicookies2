@@ -1,0 +1,289 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 3
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 3,
+    "findings": [
+      {
+        "code": "content_overlap",
+        "severity": "info",
+        "time": 9.179,
+        "selector": "#cw15",
+        "message": "Two text blocks overlap and may render unreadable.",
+        "rect": {
+          "left": 159.33,
+          "top": 1123.28,
+          "right": 557.33,
+          "bottom": 1225.28,
+          "width": 398,
+          "height": 102
+        },
+        "containerSelector": "#cw19",
+        "text": "COMPRA",
+        "fixHint": "Give each block its own zone, or put data-layout-allow-overlap on the text or on a container inside the scene. A marker on the scene root does not apply. Decoration nobody needs to read can take data-layout-ignore.",
+        "dataAttributes": {},
+        "sourceFile": "compositions/captions.html",
+        "bbox": {
+          "x": 159.33,
+          "y": 1123.28,
+          "width": 398,
+          "height": 102
+        },
+        "firstSeen": 9.179,
+        "lastSeen": 9.179,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          9.179
+        ]
+      },
+      {
+        "code": "content_overlap",
+        "severity": "info",
+        "time": 9.179,
+        "selector": "#cw16",
+        "message": "Two text blocks overlap and may render unreadable.",
+        "rect": {
+          "left": 592.58,
+          "top": 1123.28,
+          "right": 781.84,
+          "bottom": 1225.28,
+          "width": 189.26,
+          "height": 102
+        },
+        "containerSelector": "#cw20",
+        "text": "DEU",
+        "fixHint": "Give each block its own zone, or put data-layout-allow-overlap on the text or on a container inside the scene. A marker on the scene root does not apply. Decoration nobody needs to read can take data-layout-ignore.",
+        "dataAttributes": {},
+        "sourceFile": "compositions/captions.html",
+        "bbox": {
+          "x": 592.58,
+          "y": 1123.28,
+          "width": 189.26,
+          "height": 102
+        },
+        "firstSeen": 9.179,
+        "lastSeen": 9.179,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          9.179
+        ]
+      },
+      {
+        "code": "content_overlap",
+        "severity": "info",
+        "time": 9.179,
+        "selector": "#cw18",
+        "message": "Two text blocks overlap and may render unreadable.",
+        "rect": {
+          "left": 374.1,
+          "top": 1209.17,
+          "right": 705.88,
+          "bottom": 1319.33,
+          "width": 331.78,
+          "height": 110.16
+        },
+        "containerSelector": "#cw21",
+        "text": "EUROS",
+        "fixHint": "Give each block its own zone, or put data-layout-allow-overlap on the text or on a container inside the scene. A marker on the scene root does not apply. Decoration nobody needs to read can take data-layout-ignore.",
+        "dataAttributes": {},
+        "sourceFile": "compositions/captions.html",
+        "bbox": {
+          "x": 374.1,
+          "y": 1209.17,
+          "width": 331.78,
+          "height": 110.16
+        },
+        "firstSeen": 9.179,
+        "lastSeen": 9.179,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          9.179
+        ]
+      }
+    ],
+    "duration": 12.71,
+    "samples": [
+      0.706,
+      2.118,
+      3.531,
+      4.943,
+      6.355,
+      7.767,
+      9.179,
+      10.592,
+      12.004
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 3,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      0.706,
+      3.531,
+      6.355,
+      9.179,
+      12.004
+    ],
+    "checked": 26,
+    "passed": 26
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "line_unread",
+        "severity": "warning",
+        "message": "\"ATÉ AGORA € 17,00 ≈ R$ 105,40\" (7 words) is on screen 1.53 s (±0.01 s), under its 1.95 s floor: hold it about 0.5 s + 0.3 s a word (2.60 s here) before it leaves or changes; see references/motion.md.",
+        "text": "ATÉ AGORA € 17,00 ≈ R$ 105,40",
+        "selector": "#pc0-c",
+        "dataAttributes": {},
+        "sourceFile": "compositions/prices.html",
+        "bbox": {
+          "x": 358.38,
+          "y": 467.33,
+          "width": 371.99,
+          "height": 92.94
+        },
+        "time": 4.938,
+        "words": 7,
+        "seconds": 1.535,
+        "floorSeconds": 1.95,
+        "measured": [
+          {
+            "time": 4.61,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 4.735,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 4.86,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 4.984,
+            "opacity": 1,
+            "heightPx": 93
+          },
+          {
+            "time": 5.109,
+            "opacity": 1,
+            "heightPx": 86
+          },
+          {
+            "time": 5.234,
+            "opacity": 1,
+            "heightPx": 86
+          },
+          {
+            "time": 5.358,
+            "opacity": 1,
+            "heightPx": 86
+          },
+          {
+            "time": 5.981,
+            "opacity": 1,
+            "heightPx": 86
+          },
+          {
+            "time": 6.106,
+            "opacity": 1,
+            "heightPx": 86
+          },
+          {
+            "time": 6.23,
+            "opacity": 1,
+            "heightPx": 86
+          },
+          {
+            "time": 6.355,
+            "opacity": 1,
+            "heightPx": 86
+          },
+          {
+            "time": 6.48,
+            "opacity": 0.23,
+            "heightPx": 59
+          },
+          {
+            "time": 6.604,
+            "opacity": null,
+            "heightPx": null
+          },
+          {
+            "time": 6.729,
+            "opacity": null,
+            "heightPx": null
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 102
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

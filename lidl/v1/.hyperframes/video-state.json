@@ -1,7 +1,7 @@
 {
   "version": 1,
   "historyId": "cf477e78-8240-47be-98a1-f65d13aa1df8",
-  "currentRevision": null,
+  "currentRevision": "ea55383c-8af1-45b4-8460-fd50e3ef4e02",
   "pendingChanges": false,
   "files": {
     "AGENTS.md": {
@@ -21,8 +21,8 @@
       "content": "/root/.cache/hyperframes/history/cf477e78-8240-47be-98a1-f65d13aa1df8/blobs/e1/e1a2702480bfaf086795c05e36b0d72bc31b79058d21a8663afa63ab40597932"
     },
     "compositions/captions.html": {
-      "hash": "a391bad44d68b4e724023bbfcf599eb41988d2e53dfefa5a189a03987de6594e",
-      "content": "/root/.cache/hyperframes/history/cf477e78-8240-47be-98a1-f65d13aa1df8/blobs/a3/a391bad44d68b4e724023bbfcf599eb41988d2e53dfefa5a189a03987de6594e"
+      "hash": "e4aa878fbb34fc4acd30a5d0ac01ae79f103ac1098186d5498a1a0086305d766",
+      "content": "/root/.cache/hyperframes/history/cf477e78-8240-47be-98a1-f65d13aa1df8/blobs/e4/e4aa878fbb34fc4acd30a5d0ac01ae79f103ac1098186d5498a1a0086305d766"
     },
     "compositions/prices.html": {
       "hash": "73252897dcaa9b8a97ebf2a2eba0dd92809497445d8f1957e311368665c204e8",
@@ -43,9 +43,33 @@
     "package.json": {
       "hash": "6c30d2e6b425e0f01048ac071ae1904a3544aaf65228fc367c0cf8fff9e62e06",
       "content": "/root/.cache/hyperframes/history/cf477e78-8240-47be-98a1-f65d13aa1df8/blobs/6c/6c30d2e6b425e0f01048ac071ae1904a3544aaf65228fc367c0cf8fff9e62e06"
+    },
+    "assets/words_large.json": {
+      "hash": "c7ec5b0637abd94b9b1daa93f69da718653de95b3c74c40aef7873c6ce518e2f",
+      "content": "/root/.cache/hyperframes/history/cf477e78-8240-47be-98a1-f65d13aa1df8/blobs/c7/c7ec5b0637abd94b9b1daa93f69da718653de95b3c74c40aef7873c6ce518e2f"
     }
   },
-  "revisions": {},
+  "revisions": {
+    "ea55383c-8af1-45b4-8460-fd50e3ef4e02": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1794491727791,
+      "endedAt": 1794491727799,
+      "files": {
+        "assets/words_large.json": {
+          "before": null,
+          "after": "/root/.cache/hyperframes/history/cf477e78-8240-47be-98a1-f65d13aa1df8/blobs/c7/c7ec5b0637abd94b9b1daa93f69da718653de95b3c74c40aef7873c6ce518e2f"
+        },
+        "compositions/captions.html": {
+          "before": "/root/.cache/hyperframes/history/cf477e78-8240-47be-98a1-f65d13aa1df8/blobs/a3/a391bad44d68b4e724023bbfcf599eb41988d2e53dfefa5a189a03987de6594e",
+          "after": "/root/.cache/hyperframes/history/cf477e78-8240-47be-98a1-f65d13aa1df8/blobs/e4/e4aa878fbb34fc4acd30a5d0ac01ae79f103ac1098186d5498a1a0086305d766"
+        }
+      }
+    }
+  },
   "checks": {
     "latest": null,
     "revisions": {},
@@ -119,5 +143,18 @@
         "attribution": "unversioned"
       }
     ]
-  }
+  },
+  "renders": {
+    "latest": {
+      "id": "ff713aa0-1d33-4f2d-b87b-9501ba32de19",
+      "completedAt": 1794491741132,
+      "output": "/home/user/capicookies2/lidl/renders/lidl_1_legendado.mp4",
+      "status": "completed",
+      "revision": "ea55383c-8af1-45b4-8460-fd50e3ef4e02"
+    },
+    "retainedRevisions": [
+      "ea55383c-8af1-45b4-8460-fd50e3ef4e02"
+    ]
+  },
+  "pendingArtifactCleanup": []
 }

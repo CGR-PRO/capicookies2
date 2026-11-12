@@ -88,7 +88,7 @@ def main(spec_path, proj):
       font-size:84px; line-height:1.08; letter-spacing:-0.01em; color:#fff;
       -webkit-text-stroke:14px #000; paint-order:stroke fill;
       text-shadow:0 6px 0 rgba(0,0,0,.55), 0 10px 24px rgba(0,0,0,.45); }}
-    #captions .w {{ display:inline-block; transform-origin:50% 60%; margin:0 0.13em; }}
+    #captions .w {{ display:inline-block; transform-origin:50% 60%; margin:0 0.21em; }}
   </style>
   <div id="captions" data-composition-id="captions" data-width="{W}" data-height="{H}" data-layout-allow-overflow>
     {chr(10).join("    " + c for c in cap_html)}
@@ -151,6 +151,10 @@ def main(spec_path, proj):
 </template>
 """
 
+    vids = spec.get("videos") or [{"src": "assets/source.mp4", "start": 0, "dur": dur}]
+    videos = "\n      ".join(
+        f'<video id="footage{i}" class="clip footage" src="{v["src"]}" data-start="{v["start"]:.3f}" data-duration="{v["dur"]:.3f}" data-track-index="0" data-has-audio="true"></video>'
+        for i, v in enumerate(vids))
     index = f"""<!doctype html>
 <html lang="pt-BR">
   <head>
@@ -161,14 +165,14 @@ def main(spec_path, proj):
       * {{ margin:0; padding:0; box-sizing:border-box; }}
       html, body {{ width:{W}px; height:{H}px; overflow:hidden; background:#000; }}
       #root {{ position:relative; width:100%; height:100%; }}
-      #footage {{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }}
+      #root .footage {{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }}
       #captions {{ z-index:2; }}
       #prices {{ z-index:3; }}
     </style>
   </head>
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="{dur:.3f}" data-width="{W}" data-height="{H}">
-      <video id="footage" class="clip" src="assets/source.mp4" data-start="0" data-duration="{dur:.3f}" data-track-index="0" data-has-audio="true"></video>
+      {videos}
       <div id="prices" data-composition-id="prices" data-composition-src="compositions/prices.html" data-start="0" data-duration="{dur:.3f}" data-track-index="2" data-track-kind="graphics" data-width="{W}" data-height="{H}"></div>
       <div id="captions" data-composition-id="captions" data-composition-src="compositions/captions.html" data-start="0" data-duration="{dur:.3f}" data-track-index="1" data-track-kind="captions" data-width="{W}" data-height="{H}"></div>
     </div>
