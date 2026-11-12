@@ -237,5 +237,16 @@
         "attribution": "unversioned"
       }
     ]
-  }
+  },
+  "renders": {
+    "latest": {
+      "id": "94feff33-2685-493f-ae5e-81fed691b4e6",
+      "completedAt": 1794492387419,
+      "output": "/home/user/capicookies2/lidl/renders/lidl_completo_legendado.mp4",
+      "status": "completed",
+      "revision": null
+    },
+    "retainedRevisions": []
+  },
+  "pendingArtifactCleanup": []
 }
