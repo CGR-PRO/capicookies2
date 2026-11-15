@@ -10,7 +10,8 @@ import { Field, FormRow } from '../components/ui/Field';
 import { Toggle } from '../components/ui/Toggle';
 import { PayDialog } from '../components/finance/PayDialog';
 import { buildOccurrences, FREQUENCY_LABELS, nextUnpaid, type Occurrence, type OccurrenceStatus } from '../lib/recurrence';
-import { centsToInput, formatMoney, parseMoney } from '../lib/money';
+import { formatMoney } from '../lib/money';
+import { MoneyInput } from '../components/ui/MoneyInput';
 import { formatDate, isValidDateStr, relativeDay } from '../lib/dates';
 import type { Frequency, RecurringExpense } from '../lib/types';
 
@@ -24,7 +25,7 @@ function RecurringForm({ open, editing, onClose }: { open: boolean; editing: Rec
   const { categories, saveRecurring, today, settings } = useData();
   const toast = useToast();
   const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState<number | null>(null);
   const [categoryId, setCategoryId] = useState('');
   const [firstDue, setFirstDue] = useState(today);
   const [frequency, setFrequency] = useState<Frequency>('monthly');
@@ -37,7 +38,7 @@ function RecurringForm({ open, editing, onClose }: { open: boolean; editing: Rec
   useResetEffect(() => {
     if (!open) return;
     setName(editing?.name ?? '');
-    setAmount(editing ? centsToInput(editing.amount) : '');
+    setAmount(editing ? editing.amount : null);
     setCategoryId(editing?.categoryId ?? '');
     setFirstDue(editing?.firstDue ?? today);
     setFrequency(editing?.frequency ?? 'monthly');
@@ -49,7 +50,7 @@ function RecurringForm({ open, editing, onClose }: { open: boolean; editing: Rec
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    const cents = parseMoney(amount);
+    const cents = amount;
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = 'Informe o nome da despesa.';
     if (cents === null || cents <= 0) errs.amount = 'Informe um valor válido.';
@@ -102,7 +103,7 @@ function RecurringForm({ open, editing, onClose }: { open: boolean; editing: Rec
         </Field>
         <FormRow>
           <Field label={`Valor (${settings.primaryCurrency})`} error={errors.amount} required>
-            <input className="input input--money" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" />
+            <MoneyInput currency={settings.primaryCurrency} value={amount} onChange={setAmount} />
           </Field>
           <Field label="Frequência" required>
             <select className="input" value={frequency} onChange={(e) => setFrequency(e.target.value as Frequency)}>

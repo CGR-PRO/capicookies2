@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -30,15 +30,21 @@ import { EventForm } from '../components/agenda/EventForm';
 import { AreaLine, GroupedColumns, HorizontalBars } from '../components/charts/charts';
 import { computeBalance, monthlySeries, sortByDateDesc, summarizeMonth, totalsByCategory } from '../lib/finance';
 import { buildOccurrences, type Occurrence } from '../lib/recurrence';
-import { convertCents } from '../lib/currency';
+import { convertCents, describeQuoteTime } from '../lib/currency';
 import { formatMoney } from '../lib/money';
-import { addDays, dateInTz, formatDate, formatDateTime, formatMonth, monthShort, monthName, relativeDay, timeInTz, WEEKDAYS } from '../lib/dates';
+import { addDays, dateInTz, formatDate, formatMonth, monthShort, monthName, relativeDay, timeInTz, WEEKDAYS } from '../lib/dates';
 import type { AgendaEvent, Transaction, TxType } from '../lib/types';
 
 export default function Dashboard() {
   const data = useData();
   const { settings, transactions, recurring, events, today, categoryById, setEventDone } = data;
-  const { quote, loading: rateLoading, error: rateError, refresh } = useRates();
+  const { quote, loading: rateLoading, error: rateError, lastAttemptAt, refresh } = useRates();
+
+  // Consulta a cotação ao abrir o dashboard (sem duplicar a consulta feita na inicialização).
+  useEffect(() => {
+    if (!lastAttemptAt || Date.now() - new Date(lastAttemptAt).getTime() > 15_000) refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const cur = settings.primaryCurrency;
   const fmt = (c: number) => formatMoney(c, cur);
   const month = today.slice(0, 7);
@@ -129,13 +135,16 @@ export default function Dashboard() {
               <>
                 <span className="hero-secondary__value">≈ {formatMoney(secondary, settings.secondaryCurrency)}</span>
                 <span className="muted small">
-                  1 {cur} = {quote.rate.toLocaleString('pt-BR', { maximumFractionDigits: 4 })} {settings.secondaryCurrency} · cotação de {formatDateTime(quote.quotedAt, tz)}
+                  1 {cur} = {quote.rate.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })} {settings.secondaryCurrency} · {describeQuoteTime(quote, tz, today).label}
+                </span>
+                <span className="muted small">
+                  Consultada às {timeInTz(quote.fetchedAt, tz)} · fonte: {quote.provider}
                 </span>
               </>
             )}
             {rateError && (
               <span className="status-text status-text--warning" role="status">
-                <AlertTriangle size={14} aria-hidden /> {secondary === null ? `Não foi possível obter a cotação ${cur}→${settings.secondaryCurrency}.` : 'Cotação não pôde ser atualizada.'}
+                <AlertTriangle size={14} aria-hidden /> Não foi possível atualizar a cotação {cur}→{settings.secondaryCurrency}. O valor em {settings.secondaryCurrency} será exibido quando a consulta funcionar.
               </span>
             )}
             <button className="link-btn" onClick={refresh} disabled={rateLoading} aria-label="Atualizar cotação">

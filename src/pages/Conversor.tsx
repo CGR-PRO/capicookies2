@@ -6,18 +6,19 @@ import { GlassCard, PageHeader } from '../components/ui/Glass';
 import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/Field';
 import { Spinner } from '../components/ui/Spinner';
-import { CURRENCIES, convertCents, currencyName, fetchRate, type RateQuote } from '../lib/currency';
+import { CURRENCIES, convertCents, currencyName, describeQuoteTime, fetchRate, RATE_REFRESH_MS, type RateQuote } from '../lib/currency';
 import { computeBalance } from '../lib/finance';
-import { formatMoney, parseMoney } from '../lib/money';
+import { formatMoney } from '../lib/money';
+import { MoneyInput } from '../components/ui/MoneyInput';
 import { formatDateTime } from '../lib/dates';
 
 export default function Conversor() {
-  const { settings, transactions, updateSettings } = useData();
-  const { quote: mainQuote, loading: mainLoading, error: mainError, refresh } = useRates();
+  const { settings, transactions, updateSettings, today } = useData();
+  const { quote: mainQuote, loading: mainLoading, refresh } = useRates();
   const tz = settings.timezone;
   const [from, setFrom] = useState(settings.primaryCurrency);
   const [to, setTo] = useState(settings.secondaryCurrency);
-  const [amount, setAmount] = useState('100');
+  const [amount, setAmount] = useState<number | null>(10000);
   const [quote, setQuote] = useState<RateQuote | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,10 +43,12 @@ export default function Conversor() {
 
   useEffect(() => {
     load();
+    const t = setInterval(load, RATE_REFRESH_MS);
+    return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [from, to]);
 
-  const cents = parseMoney(amount);
+  const cents = amount;
   const balance = computeBalance(settings.initialBalance, transactions);
   const balanceQuoteOk = mainQuote && mainQuote.base === settings.primaryCurrency && mainQuote.target === settings.secondaryCurrency;
 
@@ -56,8 +59,8 @@ export default function Conversor() {
       <div className="split-grid">
         <GlassCard title="Converter valor" icon={<ArrowLeftRight size={18} />}>
           <div className="converter">
-            <Field label="Valor" error={amount && cents === null ? 'Valor inválido.' : null}>
-              <input className="input input--money input--lg" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <Field label="Valor">
+              <MoneyInput className="input--lg" currency={from} value={amount} onChange={setAmount} />
             </Field>
             <div className="converter__pair">
               <Field label="De">
@@ -110,7 +113,7 @@ export default function Conversor() {
                     {formatMoney(cents, from)} · 1 {from} = {quote.rate.toLocaleString('pt-BR', { maximumFractionDigits: 6 })} {to}
                   </p>
                   <p className="muted small">
-                    Cotação de {formatDateTime(quote.quotedAt, tz)} · consultada às {formatDateTime(quote.fetchedAt, tz)} · fonte: {quote.provider}
+                    {describeQuoteTime(quote, tz, today).label} · consultada às {formatDateTime(quote.fetchedAt, tz)} · fonte: {quote.provider}
                   </p>
                 </>
               )}
@@ -133,14 +136,13 @@ export default function Conversor() {
           ) : balanceQuoteOk && mainQuote ? (
             <>
               <p className="stat-value">{formatMoney(convertCents(balance, mainQuote.rate), settings.secondaryCurrency)}</p>
-              <p className="muted small">Cotação de {formatDateTime(mainQuote.quotedAt, tz)}</p>
+              <p className="muted small">{describeQuoteTime(mainQuote, tz, today).label} · consultada às {formatDateTime(mainQuote.fetchedAt, tz)}</p>
             </>
           ) : (
             <p className="status-text status-text--warning">
               <AlertTriangle size={14} aria-hidden /> Cotação indisponível no momento.
             </p>
           )}
-          {mainError && balanceQuoteOk && <p className="status-text status-text--warning small">Não foi possível atualizar; exibindo a última cotação desta sessão.</p>}
           <p className="field__hint">O valor convertido é apenas informativo — não existe uma segunda conta.</p>
           <div className="row gap wrap">
             <Button size="sm" icon={<RefreshCw size={14} />} onClick={refresh} loading={mainLoading}>

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { computeBalance, filterTransactions, monthlySeries, summarizeMonth } from './finance';
 import { buildOccurrences, dueDatesBetween, nthDue } from './recurrence';
-import { parseMoney, formatMoney } from './money';
+import { parseMoney, formatMoney, digitsToCents, formatMaskedInput } from './money';
 import { addMonths, dateInTz, timeInTz, zonedToUtc, startOfWeek } from './dates';
-import { fetchRate, RateUnavailableError, convertCents } from './currency';
+import { fetchRate, RateUnavailableError, convertCents, describeQuoteTime } from './currency';
 import type { RecurringExpense, Transaction } from './types';
 
 const tx = (p: Partial<Transaction>): Transaction => ({
@@ -113,22 +113,85 @@ describe('fuso horário', () => {
 
 describe('câmbio', () => {
   const ok = (body: unknown) => Promise.resolve(new Response(JSON.stringify(body), { status: 200 }));
-  it('usa o primeiro provedor disponível', async () => {
-    const f = (() => ok({ date: '2026-11-13', rates: { BRL: 6.1 } })) as unknown as typeof fetch;
+  const awesome = { EURBRL: { code: 'EUR', codein: 'BRL', bid: '6.1834', ask: '6.1901', timestamp: '1763143140', create_date: '2025-11-14 14:59:00' } };
+
+  it('usa a cotação intradiária da AwesomeAPI com o horário informado pela API', async () => {
+    const calls: { url: string; init?: RequestInit }[] = [];
+    const f = ((url: string, init?: RequestInit) => (calls.push({ url, init }), ok(awesome))) as unknown as typeof fetch;
+    const q = await fetchRate('EUR', 'BRL', f);
+    expect(q.rate).toBe(6.1834);
+    expect(q.quotedAt).toBe(new Date(1763143140 * 1000).toISOString());
+    expect(q.dateOnly).toBe(false);
+    expect(q.provider).toBe('AwesomeAPI');
+    // Sem cache: no-store + parâmetro único na URL.
+    expect(calls[0].init?.cache).toBe('no-store');
+    expect(calls[0].url).toMatch(/EUR-BRL\?_=\d+/);
+  });
+  it('separa horário da consulta do horário de referência', async () => {
+    const f = (() => ok(awesome)) as unknown as typeof fetch;
+    const q = await fetchRate('EUR', 'BRL', f);
+    expect(q.fetchedAt).not.toBe(q.quotedAt);
+  });
+  it('cai para o BCE (somente data) quando a AwesomeAPI falha', async () => {
+    const f = ((url: string) =>
+      url.includes('awesomeapi') ? Promise.reject(new Error('down')) : ok({ date: '2026-11-13', rates: { BRL: 6.1 } })) as unknown as typeof fetch;
     const q = await fetchRate('EUR', 'BRL', f);
     expect(q.rate).toBe(6.1);
+    expect(q.dateOnly).toBe(true);
     expect(q.quotedAt.startsWith('2026-11-13')).toBe(true);
   });
-  it('cai para o segundo provedor', async () => {
+  it('cai para o terceiro provedor', async () => {
     const f = ((url: string) =>
-      url.includes('frankfurter') ? Promise.reject(new Error('down')) : ok({ result: 'success', time_last_update_unix: 1763000000, rates: { BRL: 6.2 } })) as unknown as typeof fetch;
+      url.includes('er-api') ? ok({ result: 'success', time_last_update_unix: 1763000000, rates: { BRL: 6.2 } }) : Promise.resolve(new Response('x', { status: 500 }))) as unknown as typeof fetch;
     expect((await fetchRate('EUR', 'BRL', f)).rate).toBe(6.2);
   });
   it('falha sem inventar valor', async () => {
     const f = (() => Promise.resolve(new Response('x', { status: 503 }))) as unknown as typeof fetch;
     await expect(fetchRate('EUR', 'BRL', f)).rejects.toBeInstanceOf(RateUnavailableError);
   });
-  it('converte centavos', () => {
+  it('identifica a última cotação disponível em fins de semana', () => {
+    // sexta 13/11/2026 17:59 em Dublin, consultada no sábado 14/11
+    const friday = { quotedAt: '2026-11-13T17:59:00Z', dateOnly: false };
+    expect(describeQuoteTime(friday, 'Europe/Dublin', '2026-11-14').label).toBe('Última cotação disponível: sex, 13 nov 2026, 17:59');
+    expect(describeQuoteTime(friday, 'Europe/Dublin', '2026-11-13').label).toBe('Cotação de sex, 13 nov 2026, 17:59');
+    expect(describeQuoteTime({ quotedAt: '2026-11-13T12:00:00Z', dateOnly: true }, 'Europe/Dublin', '2026-11-13').label).toBe('Cotação de referência de sex, 13 nov 2026');
+  });
+  it('converte centavos e recalcula com a nova cotação', () => {
     expect(convertCents(10000, 6.1234)).toBe(61234);
+    expect(convertCents(12345, 6.2)).toBe(76539);
+  });
+});
+
+describe('máscara monetária', () => {
+  const show = (digits: string) => formatMaskedInput(digitsToCents(digits), 'EUR');
+  it('insere a vírgula decimal automaticamente', () => {
+    expect(show('1')).toBe('€ 0,01');
+    expect(show('12')).toBe('€ 0,12');
+    expect(show('123')).toBe('€ 1,23');
+    expect(show('1234')).toBe('€ 12,34');
+    expect(show('12345')).toBe('€ 123,45');
+    expect(show('123456')).toBe('€ 1.234,56');
+  });
+  it('lê o texto já formatado ao digitar mais um número', () => {
+    expect(digitsToCents('€ 123,456')).toBe(123456);
+    expect(digitsToCents('€ 0,012')).toBe(12);
+    expect(digitsToCents('€ 1.234,5')).toBe(12345); // apagar o último dígito
+    expect(digitsToCents('')).toBeNull();
+    expect(digitsToCents('€ ')).toBeNull();
+  });
+  it('mantém o símbolo da moeda', () => {
+    expect(formatMaskedInput(12345, 'BRL')).toBe('R$ 123,45');
+  });
+  it('lançamentos exatos: +123,45 e −12,30', () => {
+    const inc = tx({ type: 'income', amount: digitsToCents('12345')! });
+    const exp = tx({ type: 'expense', amount: digitsToCents('1230')! });
+    expect(computeBalance(100000, [inc]) - 100000).toBe(12345);
+    expect(computeBalance(100000, [inc, exp])).toBe(100000 + 12345 - 1230);
+  });
+  it('editar um valor não o multiplica nem divide', () => {
+    const t = tx({ id: 'a', type: 'income', amount: 12345 });
+    // reabrir o formulário mostra os centavos armazenados sem conversão
+    expect(formatMaskedInput(t.amount, 'EUR')).toBe('€ 123,45');
+    expect(digitsToCents(formatMaskedInput(t.amount, 'EUR'))).toBe(12345);
   });
 });

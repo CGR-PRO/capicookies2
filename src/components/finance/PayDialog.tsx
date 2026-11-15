@@ -4,7 +4,8 @@ import { Field, FormRow } from '../ui/Field';
 import { Button } from '../ui/Button';
 import { useData } from '../../store/DataProvider';
 import { useToast } from '../../store/ToastProvider';
-import { centsToInput, formatMoney, parseMoney } from '../../lib/money';
+import { formatMoney } from '../../lib/money';
+import { MoneyInput } from '../ui/MoneyInput';
 import { formatDate, isValidDateStr } from '../../lib/dates';
 import type { Occurrence } from '../../lib/recurrence';
 
@@ -13,21 +14,21 @@ export function PayDialog({ occurrence, onClose }: { occurrence: Occurrence | nu
   const { payOccurrence, today, settings } = useData();
   const toast = useToast();
   const [date, setDate] = useState(today);
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState<number | null>(null);
   const [errors, setErrors] = useState<{ date?: string; amount?: string }>({});
   const [saving, setSaving] = useState(false);
 
   useResetEffect(() => {
     if (!occurrence) return;
     setDate(today);
-    setAmount(centsToInput(occurrence.recurring.amount));
+    setAmount(occurrence.recurring.amount);
     setErrors({});
   }, [occurrence, today]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!occurrence) return;
-    const cents = parseMoney(amount);
+    const cents = amount;
     const errs: typeof errors = {};
     if (cents === null || cents <= 0) errs.amount = 'Informe um valor válido.';
     if (!isValidDateStr(date)) errs.date = 'Informe uma data válida.';
@@ -73,7 +74,7 @@ export function PayDialog({ occurrence, onClose }: { occurrence: Occurrence | nu
           </p>
           <FormRow>
             <Field label={`Valor pago (${settings.primaryCurrency})`} error={errors.amount} required>
-              <input className="input input--money" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              <MoneyInput currency={settings.primaryCurrency} value={amount} onChange={setAmount} />
             </Field>
             <Field label="Data do pagamento" error={errors.date} required>
               <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />

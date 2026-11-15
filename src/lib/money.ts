@@ -62,3 +62,22 @@ export function formatMoney(cents: number, currency: string, opts: { compact?: b
 export function centsToInput(cents: number): string {
   return (cents / 100).toFixed(2).replace('.', ',');
 }
+
+/** Máximo de dígitos aceitos pela máscara (até 99.999.999.999,99). */
+export const MASK_MAX_DIGITS = 13;
+
+/**
+ * Máscara monetária: extrai apenas os dígitos digitados e os interpreta como centavos.
+ * "1" → 1 (0,01) · "12345" → 12345 (123,45). Retorna null quando não há dígitos.
+ */
+export function digitsToCents(raw: string): number | null {
+  const digits = raw.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, MASK_MAX_DIGITS);
+  if (!digits) return null;
+  return Number(digits);
+}
+
+/** Texto exibido no campo mascarado (ex.: 12345 → "€ 123,45"). */
+export function formatMaskedInput(cents: number | null, currency: string): string {
+  if (cents === null) return '';
+  return formatMoney(cents, currency).replace(/ /g, ' ');
+}

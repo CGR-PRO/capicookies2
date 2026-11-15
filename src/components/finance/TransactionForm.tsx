@@ -5,7 +5,7 @@ import { Button } from '../ui/Button';
 import { Segmented } from '../ui/Glass';
 import { useData } from '../../store/DataProvider';
 import { useToast } from '../../store/ToastProvider';
-import { centsToInput, parseMoney } from '../../lib/money';
+import { MoneyInput } from '../ui/MoneyInput';
 import { isValidDateStr } from '../../lib/dates';
 import type { Transaction, TxType } from '../../lib/types';
 
@@ -28,7 +28,7 @@ export function TransactionForm({ open, onClose, editing, defaultType = 'expense
   const { categories, saveTransaction, today, settings } = useData();
   const toast = useToast();
   const [type, setType] = useState<TxType>(defaultType);
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState<number | null>(null);
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
   const [date, setDate] = useState(today);
@@ -39,7 +39,7 @@ export function TransactionForm({ open, onClose, editing, defaultType = 'expense
   useResetEffect(() => {
     if (!open) return;
     setType(editing?.type ?? defaultType);
-    setAmount(editing ? centsToInput(editing.amount) : '');
+    setAmount(editing ? editing.amount : null);
     setDescription(editing?.description ?? '');
     setCategoryId(editing?.categoryId ?? '');
     setDate(editing?.date ?? today);
@@ -51,8 +51,8 @@ export function TransactionForm({ open, onClose, editing, defaultType = 'expense
 
   const validate = (): { ok: boolean; cents: number | null } => {
     const e: Errors = {};
-    const cents = parseMoney(amount);
-    if (cents === null) e.amount = 'Informe um valor válido (ex.: 125,90).';
+    const cents = amount;
+    if (cents === null) e.amount = 'Informe o valor.';
     else if (cents <= 0) e.amount = 'O valor deve ser maior que zero.';
     else if (cents > 100_000_000_00) e.amount = 'Valor muito alto.';
     if (!description.trim()) e.description = 'Informe uma descrição.';
@@ -124,7 +124,7 @@ export function TransactionForm({ open, onClose, editing, defaultType = 'expense
         {editing?.recurringId && <p className="field__hint">Pagamento de gasto fixo — vencimento {editing.recurringDue}.</p>}
         <FormRow>
           <Field label={`Valor (${settings.primaryCurrency})`} error={errors.amount} required>
-            <input className="input input--money" inputMode="decimal" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} autoComplete="off" />
+            <MoneyInput currency={settings.primaryCurrency} value={amount} onChange={setAmount} />
           </Field>
           <Field label="Data" error={errors.date} required hint="Pode ser uma data anterior.">
             <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />

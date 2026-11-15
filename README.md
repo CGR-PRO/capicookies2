@@ -25,7 +25,7 @@ As rotas usam `HashRouter`, então não é preciso configurar o servidor.
 | **Entradas / Despesas** | Registrar, editar e excluir lançamentos (inclusive em datas anteriores), filtro por mês, categoria e busca. |
 | **Gastos Fixos** | Despesas recorrentes (semanal a anual) com situação **pendente**, **paga** ou **vencida**. Só afetam o saldo quando o pagamento é registrado; o pagamento pode ser desfeito. |
 | **Histórico Financeiro** | Consulta por período e categoria, saldo no início/fim do período, resumo mensal e exportação CSV. |
-| **Conversor de Moedas** | Cotação atual por serviço externo (Frankfurter/BCE, com ExchangeRate-API como reserva), exibindo data e horário. Sem histórico de cotações e sem segunda conta. Se o serviço falhar, o app informa — nunca inventa valor. |
+| **Conversor de Moedas** | Cotação intradiária EUR/BRL (AwesomeAPI; reservas: BCE via Frankfurter e ExchangeRate-API), consultada ao abrir o dashboard, a cada 5 minutos e no botão Atualizar, sem cache. Mostra o horário de referência da API separado do horário da consulta e identifica a “última cotação disponível” em fins de semana e feriados. Sem histórico e sem segunda conta. Se a consulta falhar, o app avisa e não exibe cotação antiga. |
 | **Configurações** | Fundo do dashboard (padrão, foto, carrossel ou vídeo, com enquadramento e escurecimento), tema claro/escuro, saldo inicial, moedas, fuso horário, notificações, categorias, PIN de acesso e backup/restauração. |
 
 ### Regras financeiras
@@ -33,6 +33,7 @@ As rotas usam `HashRouter`, então não é preciso configurar o servidor.
 - O saldo **nunca é armazenado**: é sempre calculado como `saldo inicial + entradas − despesas`.
   Assim, editar ou excluir um lançamento recalcula tudo automaticamente, sem duplicações.
 - Valores são guardados em **centavos inteiros** (sem erros de arredondamento).
+- Todos os campos monetários usam máscara automática: digita-se só números e a vírgula entra sozinha (`12345` → `€ 123,45`), com teclado numérico no celular.
 - Cada vencimento de gasto fixo aceita **um único** pagamento (chave `gasto + data de vencimento`).
 
 ## Arquitetura

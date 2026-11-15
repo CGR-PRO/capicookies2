@@ -11,7 +11,8 @@ import { Toggle } from '../components/ui/Toggle';
 import { CategoryManager } from '../components/finance/CategoryManager';
 import { BackgroundSettings } from '../components/settings/BackgroundSettings';
 import { CURRENCIES } from '../lib/currency';
-import { centsToInput, formatMoney, parseMoney } from '../lib/money';
+import { formatMoney } from '../lib/money';
+import { MoneyInput } from '../components/ui/MoneyInput';
 import { isValidTimeZone, listTimeZones, timeInTz } from '../lib/dates';
 import type { ThemePref } from '../lib/types';
 
@@ -19,7 +20,7 @@ function AccountSettings() {
   const { settings, updateSettings, transactions } = useData();
   const toast = useToast();
   const confirm = useConfirm();
-  const [initial, setInitial] = useState(centsToInput(settings.initialBalance));
+  const [initial, setInitial] = useState<number | null>(settings.initialBalance);
   const [primary, setPrimary] = useState(settings.primaryCurrency);
   const [secondary, setSecondary] = useState(settings.secondaryCurrency);
   const [error, setError] = useState<string | null>(null);
@@ -27,13 +28,7 @@ function AccountSettings() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    const raw = initial.trim();
-    const negative = raw.startsWith('-');
-    const cents = parseMoney(negative ? raw.slice(1) : raw);
-    if (cents === null) {
-      setError('Informe um valor válido (pode ser negativo).');
-      return;
-    }
+    const cents = initial ?? 0;
     if (primary === secondary) {
       setError('As moedas principal e secundária devem ser diferentes.');
       return;
@@ -49,7 +44,7 @@ function AccountSettings() {
     }
     setSaving(true);
     try {
-      await updateSettings({ initialBalance: negative ? -cents : cents, primaryCurrency: primary, secondaryCurrency: secondary });
+      await updateSettings({ initialBalance: cents, primaryCurrency: primary, secondaryCurrency: secondary });
       toast.success('Conta atualizada. Saldo recalculado.');
     } catch {
       toast.error('Não foi possível salvar.');
@@ -60,8 +55,8 @@ function AccountSettings() {
 
   return (
     <form className="form" onSubmit={submit} noValidate>
-      <Field label={`Saldo inicial (${settings.primaryCurrency})`} error={error} hint={`Atual: ${formatMoney(settings.initialBalance, settings.primaryCurrency)}. O saldo é sempre: saldo inicial + entradas − despesas.`}>
-        <input className="input input--money" inputMode="decimal" value={initial} onChange={(e) => setInitial(e.target.value)} />
+      <Field label={`Saldo inicial (${settings.primaryCurrency})`} error={error} hint={`Atual: ${formatMoney(settings.initialBalance, settings.primaryCurrency)}. Digite apenas números; use “-” para saldo negativo. O saldo é sempre: saldo inicial + entradas − despesas.`}>
+        <MoneyInput currency={settings.primaryCurrency} value={initial} onChange={setInitial} allowNegative />
       </Field>
       <FormRow>
         <Field label="Moeda principal">
