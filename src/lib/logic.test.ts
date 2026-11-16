@@ -9,6 +9,7 @@ import type { RecurringExpense, Transaction } from './types';
 const tx = (p: Partial<Transaction>): Transaction => ({
   id: Math.random().toString(36),
   type: 'expense',
+  accountId: 'main',
   amount: 100,
   description: 'x',
   categoryId: null,

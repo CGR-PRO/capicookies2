@@ -6,6 +6,7 @@ import { Segmented } from '../ui/Glass';
 import { useData } from '../../store/DataProvider';
 import { useToast } from '../../store/ToastProvider';
 import { MoneyInput } from '../ui/MoneyInput';
+import { AccountSelect } from '../accounts/AccountSelect';
 import { isValidDateStr } from '../../lib/dates';
 import type { Transaction, TxType } from '../../lib/types';
 
@@ -16,6 +17,8 @@ interface Props {
   editing?: Transaction | null;
   defaultType?: TxType;
   lockType?: boolean;
+  /** Conta pré-selecionada para novos lançamentos (padrão: conta principal). */
+  defaultAccountId?: string;
 }
 
 interface Errors {
@@ -24,8 +27,8 @@ interface Errors {
   date?: string;
 }
 
-export function TransactionForm({ open, onClose, editing, defaultType = 'expense', lockType }: Props) {
-  const { categories, saveTransaction, today, settings } = useData();
+export function TransactionForm({ open, onClose, editing, defaultType = 'expense', lockType, defaultAccountId }: Props) {
+  const { categories, saveTransaction, today, primaryAccount, activeAccounts, accountById } = useData();
   const toast = useToast();
   const [type, setType] = useState<TxType>(defaultType);
   const [amount, setAmount] = useState<number | null>(null);
@@ -33,6 +36,7 @@ export function TransactionForm({ open, onClose, editing, defaultType = 'expense
   const [categoryId, setCategoryId] = useState<string>('');
   const [date, setDate] = useState(today);
   const [notes, setNotes] = useState('');
+  const [accountId, setAccountId] = useState('');
   const [errors, setErrors] = useState<Errors>({});
   const [saving, setSaving] = useState(false);
 
@@ -44,8 +48,12 @@ export function TransactionForm({ open, onClose, editing, defaultType = 'expense
     setCategoryId(editing?.categoryId ?? '');
     setDate(editing?.date ?? today);
     setNotes(editing?.notes ?? '');
+    const preferred = defaultAccountId && activeAccounts.some((a) => a.id === defaultAccountId) ? defaultAccountId : primaryAccount.id;
+    setAccountId(editing?.accountId ?? preferred);
     setErrors({});
-  }, [open, editing, defaultType, today]);
+  }, [open, editing, defaultType, today]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const currency = accountById(accountId)?.currency ?? primaryAccount.currency;
 
   const cats = categories.filter((c) => c.type === type).sort((a, b) => a.name.localeCompare(b.name));
 
@@ -71,6 +79,7 @@ export function TransactionForm({ open, onClose, editing, defaultType = 'expense
       await saveTransaction({
         id: editing?.id,
         type,
+        accountId,
         amount: cents,
         description,
         categoryId: categoryId || null,
@@ -122,9 +131,12 @@ export function TransactionForm({ open, onClose, editing, defaultType = 'expense
           />
         )}
         {editing?.recurringId && <p className="field__hint">Pagamento de gasto fixo — vencimento {editing.recurringDue}.</p>}
+        <Field label="Conta" hint={type === 'income' ? 'O valor entra somente nesta conta.' : 'O valor sai somente desta conta.'} required>
+          <AccountSelect value={accountId} onChange={setAccountId} keepId={editing?.accountId} />
+        </Field>
         <FormRow>
-          <Field label={`Valor (${settings.primaryCurrency})`} error={errors.amount} required>
-            <MoneyInput currency={settings.primaryCurrency} value={amount} onChange={setAmount} />
+          <Field label={`Valor (${currency})`} error={errors.amount} required>
+            <MoneyInput currency={currency} value={amount} onChange={setAmount} />
           </Field>
           <Field label="Data" error={errors.date} required hint="Pode ser uma data anterior.">
             <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />

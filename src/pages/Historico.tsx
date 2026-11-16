@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Download, History, Search } from 'lucide-react';
 import { useData } from '../store/DataProvider';
+import { useFinance, type AccountFilter } from '../store/useFinance';
+import { AccountFilterSelect } from '../components/accounts/AccountFilterSelect';
+import { ledgerBalance } from '../lib/accounts';
 import { GlassCard, PageHeader, EmptyState, Segmented } from '../components/ui/Glass';
 import { Button } from '../components/ui/Button';
 import { TransactionForm } from '../components/finance/TransactionForm';
 import { TransactionList } from '../components/finance/TransactionList';
 import { GroupedColumns } from '../components/charts/charts';
-import { computeBalance, filterTransactions, sortByDateDesc } from '../lib/finance';
+import { filterTransactions, sortByDateDesc } from '../lib/finance';
 import { formatMoney } from '../lib/money';
 import { addDays, addMonths, formatDate, formatMonth, isValidDateStr, monthShort } from '../lib/dates';
 import type { Transaction, TxType } from '../lib/types';
@@ -14,7 +17,12 @@ import type { Transaction, TxType } from '../lib/types';
 type Preset = 'month' | 'last3' | 'year' | 'all' | 'custom';
 
 export default function Historico() {
-  const { transactions, categories, settings, today, categoryById } = useData();
+  const { transactions: allTx, categories, today, categoryById, accountById, primaryAccount } = useData();
+  const { view, originals } = useFinance();
+  const [accountFilter, setAccountFilter] = useState<AccountFilter>('all');
+  const v = useMemo(() => view(accountFilter), [view, accountFilter]);
+  const transactions = v.transactions;
+  const original = useMemo(() => new Map(allTx.map((t) => [t.id, t])), [allTx]);
   const [preset, setPreset] = useState<Preset>('month');
   const [from, setFrom] = useState(`${today.slice(0, 7)}-01`);
   const [to, setTo] = useState(today);
@@ -22,7 +30,7 @@ export default function Historico() {
   const [categoryId, setCategoryId] = useState('all');
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<Transaction | null>(null);
-  const fmt = (c: number) => formatMoney(c, settings.primaryCurrency);
+  const fmt = (c: number) => formatMoney(c, v.currency);
 
   const range = useMemo(() => {
     switch (preset) {
@@ -45,8 +53,9 @@ export default function Historico() {
   );
   const income = items.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const expense = items.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const openingBalance = range.from ? computeBalance(settings.initialBalance, transactions, addDays(range.from, -1)) : settings.initialBalance;
-  const closingBalance = range.to ? computeBalance(settings.initialBalance, transactions, range.to) : computeBalance(settings.initialBalance, transactions);
+  // Saldos consideram também as transferências entre contas (o resultado do período, não).
+  const openingBalance = range.from ? ledgerBalance(v.ledger, addDays(range.from, -1)) : v.ledger.initial;
+  const closingBalance = ledgerBalance(v.ledger, range.to);
 
   const monthly = useMemo(() => {
     const map = new Map<string, { income: number; expense: number }>();
@@ -61,13 +70,16 @@ export default function Historico() {
   }, [items]);
 
   const exportCsv = () => {
-    const header = ['Data', 'Tipo', 'Descrição', 'Categoria', `Valor (${settings.primaryCurrency})`, 'Observações'];
+    const header = ['Data', 'Tipo', 'Conta', 'Descrição', 'Categoria', 'Moeda', 'Valor', 'Observações'];
     const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
-    const rows = items.map((t) =>
-      [t.date, t.type === 'income' ? 'Entrada' : 'Despesa', t.description, categoryById(t.categoryId)?.name ?? '', ((t.type === 'income' ? 1 : -1) * t.amount / 100).toFixed(2).replace('.', ','), t.notes ?? '']
+    const rows = items.map((vt) => {
+      // Exporta o valor original, na moeda da própria conta (sem conversão).
+      const t = original.get(vt.id) ?? vt;
+      const acc = accountById(t.accountId);
+      return [t.date, t.type === 'income' ? 'Entrada' : 'Despesa', acc?.name ?? '', t.description, categoryById(t.categoryId)?.name ?? '', acc?.currency ?? primaryAccount.currency, ((t.type === 'income' ? 1 : -1) * t.amount / 100).toFixed(2).replace('.', ','), t.notes ?? '']
         .map((v) => esc(String(v)))
-        .join(';'),
-    );
+        .join(';');
+    });
     const blob = new Blob(['﻿' + [header.map(esc).join(';'), ...rows].join('\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -118,6 +130,7 @@ export default function Historico() {
           </div>
         )}
         <div className="toolbar__filters">
+          <AccountFilterSelect value={accountFilter} onChange={setAccountFilter} />
           <select className="input input--sm" value={type} onChange={(e) => { setType(e.target.value as TxType | 'all'); setCategoryId('all'); }} aria-label="Tipo">
             <option value="all">Entradas e despesas</option>
             <option value="income">Somente entradas</option>
@@ -156,6 +169,8 @@ export default function Historico() {
         </GlassCard>
       </div>
       {(categoryId !== 'all' || type !== 'all' || search) && <p className="muted small">Saldos de início e fim consideram todos os lançamentos; os totais seguem os filtros.</p>}
+      {v.missing.length > 0 && <p className="muted small">Sem cotação agora para {v.missing.map((a) => a.name).join(', ')}: não incluída(s) nos totais em {v.currency}.</p>}
+      {accountFilter === 'all' && v.accounts.some((a) => a.currency !== v.currency) && <p className="muted small">Valores de contas em outras moedas convertidos para {v.currency} pela cotação mais recente.</p>}
 
       {monthly.length > 1 && (
         <GlassCard title="Resumo mensal do período">
@@ -177,7 +192,7 @@ export default function Historico() {
             Ajuste o período ou os filtros.
           </EmptyState>
         ) : (
-          <TransactionList items={items} onEdit={setEditing} />
+          <TransactionList items={originals(items)} onEdit={setEditing} />
         )}
       </GlassCard>
 

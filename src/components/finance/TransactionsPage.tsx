@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Search, Wallet } from 'lucide-react';
 import { useData } from '../../store/DataProvider';
+import { useFinance, type AccountFilter } from '../../store/useFinance';
+import { AccountFilterSelect } from '../accounts/AccountFilterSelect';
 import { GlassCard, PageHeader, EmptyState } from '../ui/Glass';
 import { Button } from '../ui/Button';
 import { TransactionForm } from './TransactionForm';
@@ -13,12 +15,16 @@ import type { Transaction, TxType } from '../../lib/types';
 
 /** Página reutilizada por "Entradas" e "Despesas". */
 export function TransactionsPage({ type }: { type: TxType }) {
-  const { transactions, categories, settings, today, categoryById } = useData();
+  const { categories, today, categoryById } = useData();
+  const { view, originals } = useFinance();
+  const [accountFilter, setAccountFilter] = useState<AccountFilter>('all');
+  const v = useMemo(() => view(accountFilter), [view, accountFilter]);
+  const transactions = v.transactions;
   const [month, setMonth] = useState(today.slice(0, 7));
   const [categoryId, setCategoryId] = useState('all');
   const [search, setSearch] = useState('');
   const [form, setForm] = useState<{ open: boolean; editing: Transaction | null }>({ open: false, editing: null });
-  const fmt = (c: number) => formatMoney(c, settings.primaryCurrency);
+  const fmt = (c: number) => formatMoney(c, v.currency);
   const isIncome = type === 'income';
 
   const monthItems = useMemo(
@@ -61,6 +67,7 @@ export function TransactionsPage({ type }: { type: TxType }) {
           )}
         </div>
         <div className="toolbar__filters">
+          <AccountFilterSelect value={accountFilter} onChange={setAccountFilter} />
           <label className="sr-only" htmlFor="cat-filter">
             Filtrar por categoria
           </label>
@@ -85,6 +92,7 @@ export function TransactionsPage({ type }: { type: TxType }) {
 
       <div className="split-grid">
         <GlassCard title={`${items.length} lançamento${items.length === 1 ? '' : 's'}`} actions={<strong className="total-pill">Total: {fmt(total)}</strong>}>
+          {v.missing.length > 0 && <p className="muted small">Sem cotação agora para {v.missing.map((a) => a.name).join(', ')}: não incluída(s) no total.</p>}
           {items.length === 0 ? (
             <EmptyState
               icon={<Wallet size={28} />}
@@ -96,7 +104,7 @@ export function TransactionsPage({ type }: { type: TxType }) {
               }
             />
           ) : (
-            <TransactionList items={items} onEdit={(t) => setForm({ open: true, editing: t })} />
+            <TransactionList items={originals(items)} onEdit={(t) => setForm({ open: true, editing: t })} />
           )}
         </GlassCard>
         <GlassCard title="Por categoria">
@@ -115,7 +123,7 @@ export function TransactionsPage({ type }: { type: TxType }) {
         </GlassCard>
       </div>
 
-      <TransactionForm open={form.open} editing={form.editing} defaultType={type} lockType onClose={() => setForm({ open: false, editing: null })} />
+      <TransactionForm open={form.open} editing={form.editing} defaultType={type} lockType defaultAccountId={accountFilter !== 'all' ? accountFilter : undefined} onClose={() => setForm({ open: false, editing: null })} />
     </div>
   );
 }

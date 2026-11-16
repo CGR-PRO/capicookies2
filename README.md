@@ -20,9 +20,10 @@ As rotas usam `HashRouter`, então não é preciso configurar o servidor.
 
 | Seção | O que faz |
 |---|---|
-| **Dashboard** | Saldo atual (moeda principal) e equivalente na secundária, entradas/despesas/resultado do mês, vencimentos em aberto, gráficos de entradas × despesas e evolução do saldo, próximos vencimentos, últimas movimentações, próximos compromissos e despesas por categoria. |
+| **Dashboard** | Filtro por conta (ou todas), saldo disponível e equivalente na moeda secundária, **ganhos do mês** (verde), **gastos do mês** (vermelho) e **resultado líquido** (sobrou/faltou) com seletor de mês e ano, seção **Minhas Contas** (principal, secundárias e total consolidado), vencimentos em aberto, gráficos de entradas × despesas e evolução do saldo, próximos vencimentos, últimas movimentações, próximos compromissos e despesas por categoria. |
 | **Agenda** | Calendário mensal, semanal e diário; compromissos e tarefas; lembretes; marcar tarefas como concluídas; fuso horário configurável (padrão `Europe/Dublin`). |
-| **Entradas / Despesas** | Registrar, editar e excluir lançamentos (inclusive em datas anteriores), filtro por mês, categoria e busca. |
+| **Contas** | Contas manuais (Conta Principal, secundárias, reserva, dinheiro em espécie…) com nome, saldo inicial, moeda, cor e ícone; histórico individual com saldo após cada movimento; transferências entre contas; editar, arquivar e reativar (excluir só contas sem movimentações). |
+| **Entradas / Despesas** | Registrar, editar e excluir lançamentos em uma conta (inclusive em datas anteriores), filtro por conta, mês, categoria e busca. |
 | **Gastos Fixos** | Despesas recorrentes (semanal a anual) com situação **pendente**, **paga** ou **vencida**. Só afetam o saldo quando o pagamento é registrado; o pagamento pode ser desfeito. |
 | **Histórico Financeiro** | Consulta por período e categoria, saldo no início/fim do período, resumo mensal e exportação CSV. |
 | **Conversor de Moedas** | Cotação intradiária EUR/BRL (AwesomeAPI; reservas: BCE via Frankfurter e ExchangeRate-API), consultada ao abrir o dashboard, a cada 5 minutos e no botão Atualizar, sem cache. Mostra o horário de referência da API separado do horário da consulta e identifica a “última cotação disponível” em fins de semana e feriados. Sem histórico e sem segunda conta. Se a consulta falhar, o app avisa e não exibe cotação antiga. |
@@ -30,18 +31,23 @@ As rotas usam `HashRouter`, então não é preciso configurar o servidor.
 
 ### Regras financeiras
 
-- O saldo **nunca é armazenado**: é sempre calculado como `saldo inicial + entradas − despesas`.
+- O saldo **nunca é armazenado**: o de cada conta é sempre `saldo inicial + entradas − despesas + transferências recebidas − enviadas`.
   Assim, editar ou excluir um lançamento recalcula tudo automaticamente, sem duplicações.
 - Valores são guardados em **centavos inteiros** (sem erros de arredondamento).
 - Todos os campos monetários usam máscara automática: digita-se só números e a vírgula entra sozinha (`12345` → `€ 123,45`), com teclado numérico no celular.
-- Cada vencimento de gasto fixo aceita **um único** pagamento (chave `gasto + data de vencimento`).
+- Cada vencimento de gasto fixo aceita **um único** pagamento (chave `gasto + data de vencimento`); só reduz o saldo da conta escolhida quando é pago.
+- **Transferências** movem dinheiro entre contas e não são ganho nem gasto: o total consolidado e o resultado mensal não mudam.
+- **Resultado mensal** = entradas − despesas do mês escolhido. É diferente do saldo disponível, que acumula todos os meses.
+- Contas em outras moedas entram no total consolidado convertidas pela cotação mais recente (data exibida, sem histórico). Sem cotação, a conta fica de fora do total e o app avisa.
+- **Migração**: ao atualizar, o app cria a *Conta Principal* com o saldo inicial e a moeda já configurados e associa a ela todos os lançamentos antigos. Nada é apagado (banco IndexedDB v1 → v2) e backups antigos também são migrados ao importar.
 
 ## Arquitetura
 
 ```
 src/
   lib/           Lógica pura e testada (sem React)
-    finance.ts     saldo, resumos, filtros
+    finance.ts     resumos mensais, filtros
+    accounts.ts    contas, transferências, consolidação, histórico e migração
     recurrence.ts  vencimentos e situação dos gastos fixos
     dates.ts       datas de calendário e conversão de fuso horário
     currency.ts    serviço de câmbio com provedores de reserva

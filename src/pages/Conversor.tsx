@@ -7,13 +7,14 @@ import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/Field';
 import { Spinner } from '../components/ui/Spinner';
 import { CURRENCIES, convertCents, currencyName, describeQuoteTime, fetchRate, RATE_REFRESH_MS, type RateQuote } from '../lib/currency';
-import { computeBalance } from '../lib/finance';
+import { useFinance } from '../store/useFinance';
 import { formatMoney } from '../lib/money';
 import { MoneyInput } from '../components/ui/MoneyInput';
 import { formatDateTime } from '../lib/dates';
 
 export default function Conversor() {
-  const { settings, transactions, updateSettings, today } = useData();
+  const { settings, updateSettings, today } = useData();
+  const { consolidated } = useFinance();
   const { quote: mainQuote, loading: mainLoading, refresh } = useRates();
   const tz = settings.timezone;
   const [from, setFrom] = useState(settings.primaryCurrency);
@@ -49,7 +50,7 @@ export default function Conversor() {
   }, [from, to]);
 
   const cents = amount;
-  const balance = computeBalance(settings.initialBalance, transactions);
+  const balance = consolidated.total;
   const balanceQuoteOk = mainQuote && mainQuote.base === settings.primaryCurrency && mainQuote.target === settings.secondaryCurrency;
 
   return (
@@ -127,7 +128,7 @@ export default function Conversor() {
         </GlassCard>
 
         <GlassCard title="Saldo convertido" icon={<Wallet size={18} />}>
-          <p className="muted small">Saldo da conta principal ({currencyName(settings.primaryCurrency)})</p>
+          <p className="muted small">Saldo total consolidado ({currencyName(settings.primaryCurrency)})</p>
           <p className="stat-value">{formatMoney(balance, settings.primaryCurrency)}</p>
           <hr className="divider" />
           <p className="muted small">Equivalente em {currencyName(settings.secondaryCurrency)}</p>
@@ -143,7 +144,8 @@ export default function Conversor() {
               <AlertTriangle size={14} aria-hidden /> Cotação indisponível no momento.
             </p>
           )}
-          <p className="field__hint">O valor convertido é apenas informativo — não existe uma segunda conta.</p>
+          {consolidated.missing.length > 0 && <p className="muted small">Sem cotação agora para {consolidated.missing.map((a) => a.name).join(', ')}: não incluída(s).</p>}
+          <p className="field__hint">O valor convertido é apenas informativo — não cria nem altera nenhuma conta.</p>
           <div className="row gap wrap">
             <Button size="sm" icon={<RefreshCw size={14} />} onClick={refresh} loading={mainLoading}>
               Atualizar

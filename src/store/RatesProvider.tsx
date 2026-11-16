@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { fetchRate, RATE_REFRESH_MS, type RateQuote } from '../lib/currency';
 import { useData } from './DataProvider';
 
@@ -15,14 +15,27 @@ interface RatesApi {
   error: string | null;
   /** Instante (ISO) da última tentativa de consulta. */
   lastAttemptAt: string | null;
+  /**
+   * Cotações moeda-da-conta → moeda principal, para contas em outras moedas.
+   * Só em memória; uma moeda que falhou fica ausente (nunca usa valor antigo).
+   */
+  accountQuotes: Record<string, RateQuote>;
+  /** Moedas de contas cuja cotação não pôde ser obtida na última consulta. */
+  accountQuoteErrors: string[];
   refresh(): Promise<void>;
 }
 
 const RatesContext = createContext<RatesApi | null>(null);
 
 export function RatesProvider({ children }: { children: ReactNode }) {
-  const { settings, ready } = useData();
+  const { settings, ready, accounts } = useData();
   const { primaryCurrency: base, secondaryCurrency: target } = settings;
+  const currencyKey = useMemo(
+    () => [...new Set(accounts.map((a) => a.currency).filter((c) => c !== base))].sort().join(','),
+    [accounts, base],
+  );
+  const [accountQuotes, setAccountQuotes] = useState<Record<string, RateQuote>>({});
+  const [accountQuoteErrors, setAccountQuoteErrors] = useState<string[]>([]);
   const [quote, setQuote] = useState<RateQuote | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +47,8 @@ export function RatesProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     setLastAttemptAt(new Date().toISOString());
+    const others = currencyKey ? currencyKey.split(',') : [];
+    const crossP = Promise.allSettled(others.map((c) => fetchRate(c, base)));
     try {
       const q = await fetchRate(base, target);
       if (id === reqId.current) setQuote(q);
@@ -42,14 +57,25 @@ export function RatesProvider({ children }: { children: ReactNode }) {
         setQuote(null);
         setError((e as Error).message);
       }
-    } finally {
-      if (id === reqId.current) setLoading(false);
     }
-  }, [base, target]);
+    const cross = await crossP;
+    if (id === reqId.current) {
+      const ok: Record<string, RateQuote> = {};
+      const failed: string[] = [];
+      cross.forEach((r, i) => {
+        if (r.status === 'fulfilled') ok[others[i]] = r.value;
+        else failed.push(others[i]);
+      });
+      setAccountQuotes(ok);
+      setAccountQuoteErrors(failed);
+      setLoading(false);
+    }
+  }, [base, target, currencyKey]);
 
   useEffect(() => {
     if (!ready) return;
     setQuote(null);
+    setAccountQuotes({});
     refresh();
     const t = setInterval(refresh, RATE_REFRESH_MS);
     const onVisible = () => {
@@ -62,7 +88,7 @@ export function RatesProvider({ children }: { children: ReactNode }) {
     };
   }, [ready, refresh]);
 
-  return <RatesContext.Provider value={{ quote, loading, error, lastAttemptAt, refresh }}>{children}</RatesContext.Provider>;
+  return <RatesContext.Provider value={{ quote, loading, error, lastAttemptAt, accountQuotes, accountQuoteErrors, refresh }}>{children}</RatesContext.Provider>;
 }
 
 export function useRates(): RatesApi {

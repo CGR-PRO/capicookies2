@@ -152,27 +152,29 @@ export function GroupedColumns({ data, series, format, height = 220, caption }: 
         )}
         <Tooltip t={tip} />
       </div>
-      <table className="sr-only">
-        <caption>{caption}</caption>
-        <thead>
-          <tr>
-            <th>Mês</th>
-            {series.map((s) => (
-              <th key={s.name}>{s.name}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((d) => (
-            <tr key={d.fullLabel}>
-              <th>{d.fullLabel}</th>
-              {d.values.map((v, i) => (
-                <td key={i}>{format(v)}</td>
+      <div className="sr-only">
+        <table>
+          <caption>{caption}</caption>
+          <thead>
+            <tr>
+              <th>Mês</th>
+              {series.map((s) => (
+                <th key={s.name}>{s.name}</th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((d) => (
+              <tr key={d.fullLabel}>
+                <th>{d.fullLabel}</th>
+                {d.values.map((v, i) => (
+                  <td key={i}>{format(v)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }
@@ -262,17 +264,19 @@ export function AreaLine({ points, color, format, height = 180, caption }: LineP
           </div>
         )}
       </div>
-      <table className="sr-only">
-        <caption>{caption}</caption>
-        <tbody>
-          {points.map((p, i) => (
-            <tr key={i}>
-              <th>{p.label}</th>
-              <td>{format(p.value)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="sr-only">
+        <table>
+          <caption>{caption}</caption>
+          <tbody>
+            {points.map((p, i) => (
+              <tr key={i}>
+                <th>{p.label}</th>
+                <td>{format(p.value)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }

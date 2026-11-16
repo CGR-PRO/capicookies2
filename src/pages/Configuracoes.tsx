@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { Bell, Database, Download, Image, Lock, Palette, Tags, Upload, Wallet } from 'lucide-react';
 import { useData, type BackupFile } from '../store/DataProvider';
 import { useToast } from '../store/ToastProvider';
@@ -17,10 +18,10 @@ import { isValidTimeZone, listTimeZones, timeInTz } from '../lib/dates';
 import type { ThemePref } from '../lib/types';
 
 function AccountSettings() {
-  const { settings, updateSettings, transactions } = useData();
+  const { settings, updateSettings, primaryAccount, saveAccount, accounts } = useData();
   const toast = useToast();
   const confirm = useConfirm();
-  const [initial, setInitial] = useState<number | null>(settings.initialBalance);
+  const [initial, setInitial] = useState<number | null>(primaryAccount.initialBalance);
   const [primary, setPrimary] = useState(settings.primaryCurrency);
   const [secondary, setSecondary] = useState(settings.secondaryCurrency);
   const [error, setError] = useState<string | null>(null);
@@ -34,17 +35,18 @@ function AccountSettings() {
       return;
     }
     setError(null);
-    if (primary !== settings.primaryCurrency && transactions.length) {
+    if (primary !== settings.primaryCurrency) {
       const ok = await confirm({
         title: 'Alterar moeda principal?',
-        message: `Os valores já registrados não serão convertidos — passarão apenas a ser exibidos em ${primary}.`,
+        message: `Os lançamentos continuam na moeda de cada conta. O total consolidado e os indicadores de “Todas as contas” passarão a ser exibidos em ${primary}, convertidos pela cotação mais recente.`,
         confirmLabel: 'Alterar',
       });
       if (!ok) return;
     }
     setSaving(true);
     try {
-      await updateSettings({ initialBalance: cents, primaryCurrency: primary, secondaryCurrency: secondary });
+      if (cents !== primaryAccount.initialBalance) await saveAccount({ ...primaryAccount, initialBalance: cents });
+      await updateSettings({ primaryCurrency: primary, secondaryCurrency: secondary });
       toast.success('Conta atualizada. Saldo recalculado.');
     } catch {
       toast.error('Não foi possível salvar.');
@@ -55,11 +57,15 @@ function AccountSettings() {
 
   return (
     <form className="form" onSubmit={submit} noValidate>
-      <Field label={`Saldo inicial (${settings.primaryCurrency})`} error={error} hint={`Atual: ${formatMoney(settings.initialBalance, settings.primaryCurrency)}. Digite apenas números; use “-” para saldo negativo. O saldo é sempre: saldo inicial + entradas − despesas.`}>
-        <MoneyInput currency={settings.primaryCurrency} value={initial} onChange={setInitial} allowNegative />
+      <Field label={`Saldo inicial — ${primaryAccount.name} (${primaryAccount.currency})`} error={error} hint={`Atual: ${formatMoney(primaryAccount.initialBalance, primaryAccount.currency)}. Digite apenas números; use “-” para saldo negativo. Saldo da conta = saldo inicial + entradas − despesas ± transferências.`}>
+        <MoneyInput currency={primaryAccount.currency} value={initial} onChange={setInitial} allowNegative />
       </Field>
+      <p className="field__hint">
+        {accounts.length > 1 ? `Você tem ${accounts.length} contas. ` : ''}
+        <Link to="/contas" className="link-btn">Gerenciar contas</Link>
+      </p>
       <FormRow>
-        <Field label="Moeda principal">
+        <Field label="Moeda principal (consolidação)">
           <select className="input" value={primary} onChange={(e) => setPrimary(e.target.value)}>
             {CURRENCIES.map((c) => (
               <option key={c.code} value={c.code}>
@@ -288,7 +294,7 @@ function DataSettings() {
 }
 
 export default function Configuracoes() {
-  const { settings, updateSettings } = useData();
+  const { settings, updateSettings, primaryAccount } = useData();
   return (
     <div className="page">
       <PageHeader title="Configurações" subtitle="Personalize a aparência, a conta financeira e a agenda." />
@@ -317,7 +323,7 @@ export default function Configuracoes() {
         </GlassCard>
 
         <GlassCard title="Conta financeira" icon={<Wallet size={18} />}>
-          <AccountSettings key={`${settings.initialBalance}|${settings.primaryCurrency}|${settings.secondaryCurrency}`} />
+          <AccountSettings key={`${primaryAccount.initialBalance}|${settings.primaryCurrency}|${settings.secondaryCurrency}`} />
         </GlassCard>
 
         <GlassCard title="Agenda e lembretes" icon={<Bell size={18} />}>

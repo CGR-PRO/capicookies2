@@ -12,6 +12,8 @@ import { PayDialog } from '../components/finance/PayDialog';
 import { buildOccurrences, FREQUENCY_LABELS, nextUnpaid, type Occurrence, type OccurrenceStatus } from '../lib/recurrence';
 import { formatMoney } from '../lib/money';
 import { MoneyInput } from '../components/ui/MoneyInput';
+import { AccountSelect } from '../components/accounts/AccountSelect';
+import { useFinance } from '../store/useFinance';
 import { formatDate, isValidDateStr, relativeDay } from '../lib/dates';
 import type { Frequency, RecurringExpense } from '../lib/types';
 
@@ -22,7 +24,7 @@ const STATUS_META: Record<OccurrenceStatus, { label: string; tone: 'good' | 'war
 };
 
 function RecurringForm({ open, editing, onClose }: { open: boolean; editing: RecurringExpense | null; onClose(): void }) {
-  const { categories, saveRecurring, today, settings } = useData();
+  const { categories, saveRecurring, today, primaryAccount, accountById } = useData();
   const toast = useToast();
   const [name, setName] = useState('');
   const [amount, setAmount] = useState<number | null>(null);
@@ -32,6 +34,7 @@ function RecurringForm({ open, editing, onClose }: { open: boolean; editing: Rec
   const [endDate, setEndDate] = useState('');
   const [active, setActive] = useState(true);
   const [notes, setNotes] = useState('');
+  const [accountId, setAccountId] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -45,8 +48,12 @@ function RecurringForm({ open, editing, onClose }: { open: boolean; editing: Rec
     setEndDate(editing?.endDate ?? '');
     setActive(editing?.active ?? true);
     setNotes(editing?.notes ?? '');
+    const acc = editing?.accountId;
+    setAccountId(acc && accountById(acc) ? acc : primaryAccount.id);
     setErrors({});
-  }, [open, editing, today]);
+  }, [open, editing, today]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const currency = accountById(accountId)?.currency ?? primaryAccount.currency;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -65,6 +72,7 @@ function RecurringForm({ open, editing, onClose }: { open: boolean; editing: Rec
         id: editing?.id,
         name,
         amount: cents,
+        accountId,
         categoryId: categoryId || null,
         firstDue,
         frequency,
@@ -101,9 +109,12 @@ function RecurringForm({ open, editing, onClose }: { open: boolean; editing: Rec
         <Field label="Nome da despesa" error={errors.name} required>
           <input className="input" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Aluguel" />
         </Field>
+        <Field label="Conta de pagamento" hint="O saldo desta conta só muda quando o pagamento for registrado.">
+          <AccountSelect value={accountId} onChange={setAccountId} keepId={editing?.accountId} />
+        </Field>
         <FormRow>
-          <Field label={`Valor (${settings.primaryCurrency})`} error={errors.amount} required>
-            <MoneyInput currency={settings.primaryCurrency} value={amount} onChange={setAmount} />
+          <Field label={`Valor (${currency})`} error={errors.amount} required>
+            <MoneyInput currency={currency} value={amount} onChange={setAmount} />
           </Field>
           <Field label="Frequência" required>
             <select className="input" value={frequency} onChange={(e) => setFrequency(e.target.value as Frequency)}>
@@ -153,7 +164,14 @@ export default function GastosFixos() {
   const [statusFilter, setStatusFilter] = useState<'open' | OccurrenceStatus | 'all'>('open');
   const [form, setForm] = useState<{ open: boolean; editing: RecurringExpense | null }>({ open: false, editing: null });
   const [paying, setPaying] = useState<Occurrence | null>(null);
+  const { accountById, primaryAccount } = useData();
+  const { toPrimary } = useFinance();
   const fmt = (c: number) => formatMoney(c, settings.primaryCurrency);
+  const curOf = (accountId?: string) => accountById(accountId)?.currency ?? primaryAccount.currency;
+  const fmtIn = (c: number, accountId?: string) => formatMoney(c, curOf(accountId));
+  /** Valor na moeda principal para os totais; null se a conta está em outra moeda sem cotação. */
+  const inPrimary = (c: number, accountId?: string) => toPrimary(c, curOf(accountId)) ?? 0;
+  const noRate = [...new Set(recurring.map((r) => curOf(r.accountId)))].filter((c) => toPrimary(100, c) === null);
 
   const occurrences = useMemo(() => buildOccurrences(recurring, transactions, today, { horizonDays: 60 }), [recurring, transactions, today]);
   const counts = useMemo(() => {
@@ -161,19 +179,19 @@ export default function GastosFixos() {
     for (const o of occurrences) {
       if (o.status === 'pending' && o.due.slice(0, 7) <= today.slice(0, 7)) {
         c.pending++;
-        c.pendingTotal += o.recurring.amount;
+        c.pendingTotal += inPrimary(o.recurring.amount, o.recurring.accountId);
       }
       if (o.status === 'overdue') {
         c.overdue++;
-        c.overdueTotal += o.recurring.amount;
+        c.overdueTotal += inPrimary(o.recurring.amount, o.recurring.accountId);
       }
       if (o.status === 'paid' && o.payment && o.payment.date.slice(0, 7) === today.slice(0, 7)) {
         c.paidMonth++;
-        c.paidMonthTotal += o.payment.amount;
+        c.paidMonthTotal += inPrimary(o.payment.amount, o.payment.accountId);
       }
     }
     return c;
-  }, [occurrences, today]);
+  }, [occurrences, today, toPrimary]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = occurrences.filter((o) => {
     if (statusFilter === 'all') return true;
@@ -186,7 +204,7 @@ export default function GastosFixos() {
     if (!o.payment) return;
     const ok = await confirm({
       title: 'Desfazer pagamento?',
-      message: `O lançamento de ${fmt(o.payment.amount)} será excluído, o saldo recalculado e o vencimento voltará a ficar pendente.`,
+      message: `O lançamento de ${fmtIn(o.payment.amount, o.payment.accountId)} será excluído, o saldo recalculado e o vencimento voltará a ficar pendente.`,
       confirmLabel: 'Desfazer',
       danger: true,
     });
@@ -219,7 +237,7 @@ export default function GastosFixos() {
     .filter((r) => r.active)
     .reduce((s, r) => {
       const factor = { weekly: 52 / 12, biweekly: 26 / 12, monthly: 1, bimonthly: 1 / 2, quarterly: 1 / 3, semiannual: 1 / 6, yearly: 1 / 12 }[r.frequency];
-      return s + r.amount * factor;
+      return s + inPrimary(r.amount, r.accountId) * factor;
     }, 0);
 
   return (
@@ -250,6 +268,7 @@ export default function GastosFixos() {
         <GlassCard className="stat-card" title="Custo mensal estimado" icon={<Repeat size={18} />}>
           <p className="stat-value">{fmt(Math.round(monthlyEquivalent))}</p>
           <p className="muted small">{recurring.filter((r) => r.active).length} gasto(s) ativo(s)</p>
+          {noRate.length > 0 && <p className="muted small">Totais em {settings.primaryCurrency}; sem cotação agora para {noRate.join(', ')} (não incluído).</p>}
         </GlassCard>
       </div>
 
@@ -312,7 +331,7 @@ export default function GastosFixos() {
                     <Badge tone={meta.tone} icon={meta.icon}>
                       {meta.label}
                     </Badge>
-                    <span className="due-row__amount">{fmt(o.payment?.amount ?? o.recurring.amount)}</span>
+                    <span className="due-row__amount">{o.payment ? fmtIn(o.payment.amount, o.payment.accountId) : fmtIn(o.recurring.amount, o.recurring.accountId)}</span>
                     {o.status === 'paid' ? (
                       <Button size="sm" variant="ghost" icon={<Undo2 size={14} />} onClick={() => undoPayment(o)}>
                         Desfazer
@@ -349,7 +368,7 @@ export default function GastosFixos() {
                           {next ? ` · próximo: ${formatDate(next)}` : r.active ? ' · encerrado' : ''}
                         </span>
                       </div>
-                      <span className="due-row__amount">{fmt(r.amount)}</span>
+                      <span className="due-row__amount">{fmtIn(r.amount, r.accountId)}</span>
                       <Toggle
                         hideLabel
                         label={`${r.name} ativo`}

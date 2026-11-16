@@ -10,7 +10,7 @@
  * `createStore()`. Nenhum componente precisa ser alterado.
  */
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { AgendaEvent, Category, MediaRecord, RecurringExpense, Transaction } from './types';
+import type { Account, AgendaEvent, Category, MediaRecord, RecurringExpense, Transaction, Transfer } from './types';
 
 export interface Collections {
   categories: Category;
@@ -18,6 +18,8 @@ export interface Collections {
   recurring: RecurringExpense;
   events: AgendaEvent;
   media: MediaRecord;
+  accounts: Account;
+  transfers: Transfer;
 }
 
 export type CollectionName = keyof Collections;
@@ -39,26 +41,37 @@ interface AppDB extends DBSchema {
   recurring: { key: string; value: RecurringExpense };
   events: { key: string; value: AgendaEvent; indexes: { by_start: string } };
   media: { key: string; value: MediaRecord };
+  accounts: { key: string; value: Account };
+  transfers: { key: string; value: Transfer; indexes: { by_date: string } };
   kv: { key: string; value: unknown };
 }
 
 const DB_NAME = 'agenda-financeira';
-const DB_VERSION = 1;
+/** v1: dados originais · v2: contas e transferências (migração não destrutiva). */
+const DB_VERSION = 2;
 
 export class IndexedDBStore implements DataStore {
   private dbp: Promise<IDBPDatabase<AppDB>>;
 
   constructor(name = DB_NAME) {
     this.dbp = openDB<AppDB>(name, DB_VERSION, {
-      upgrade(db) {
-        db.createObjectStore('categories', { keyPath: 'id' });
-        const tx = db.createObjectStore('transactions', { keyPath: 'id' });
-        tx.createIndex('by_date', 'date');
-        db.createObjectStore('recurring', { keyPath: 'id' });
-        const ev = db.createObjectStore('events', { keyPath: 'id' });
-        ev.createIndex('by_start', 'start');
-        db.createObjectStore('media', { keyPath: 'id' });
-        db.createObjectStore('kv');
+      upgrade(db, oldVersion) {
+        // Só cria o que falta: os dados existentes nunca são apagados na atualização.
+        if (oldVersion < 1) {
+          db.createObjectStore('categories', { keyPath: 'id' });
+          const tx = db.createObjectStore('transactions', { keyPath: 'id' });
+          tx.createIndex('by_date', 'date');
+          db.createObjectStore('recurring', { keyPath: 'id' });
+          const ev = db.createObjectStore('events', { keyPath: 'id' });
+          ev.createIndex('by_start', 'start');
+          db.createObjectStore('media', { keyPath: 'id' });
+          db.createObjectStore('kv');
+        }
+        if (oldVersion < 2) {
+          db.createObjectStore('accounts', { keyPath: 'id' });
+          const tr = db.createObjectStore('transfers', { keyPath: 'id' });
+          tr.createIndex('by_date', 'date');
+        }
       },
     });
   }
@@ -101,7 +114,7 @@ export class IndexedDBStore implements DataStore {
 
   async clearAll(): Promise<void> {
     const db = await this.dbp;
-    const names = ['categories', 'transactions', 'recurring', 'events', 'media', 'kv'] as const;
+    const names = ['categories', 'transactions', 'recurring', 'events', 'media', 'accounts', 'transfers', 'kv'] as const;
     const tx = db.transaction(names as any, 'readwrite');
     await Promise.all([...names.map((n) => tx.objectStore(n as any).clear()), tx.done]);
   }

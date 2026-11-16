@@ -15,7 +15,9 @@ interface Props {
 }
 
 export function TransactionList({ items, onEdit, compact, showActions = true }: Props) {
-  const { categoryById, settings, deleteTransaction } = useData();
+  const { categoryById, accountById, accounts, primaryAccount, deleteTransaction } = useData();
+  const showAccount = accounts.length > 1;
+  const cur = (t: Transaction) => accountById(t.accountId)?.currency ?? primaryAccount.currency;
   const toast = useToast();
   const confirm = useConfirm();
 
@@ -24,7 +26,7 @@ export function TransactionList({ items, onEdit, compact, showActions = true }: 
       title: 'Excluir lançamento?',
       message: (
         <>
-          <strong>{t.description}</strong> ({formatMoney(t.amount, settings.primaryCurrency)}) será removido e o saldo recalculado.
+          <strong>{t.description}</strong> ({formatMoney(t.amount, cur(t))}) será removido e o saldo da conta recalculado.
           {t.recurringId && ' O vencimento do gasto fixo voltará a ficar pendente.'}
         </>
       ),
@@ -44,6 +46,7 @@ export function TransactionList({ items, onEdit, compact, showActions = true }: 
     <ul className={`tx-list${compact ? ' tx-list--compact' : ''}`}>
       {items.map((t) => {
         const cat = categoryById(t.categoryId);
+        const acc = accountById(t.accountId);
         const sign = t.type === 'income' ? '+' : '−';
         return (
           <li key={t.id} className="tx-row">
@@ -55,11 +58,19 @@ export function TransactionList({ items, onEdit, compact, showActions = true }: 
               </span>
               <span className="tx-row__meta">
                 {formatDate(t.date)} · {cat?.name ?? 'Sem categoria'}
+                {showAccount && acc && (
+                  <>
+                    {' · '}
+                    <span className="acc-chip" style={{ ['--acc-color' as string]: acc.color }}>
+                      {acc.name}
+                    </span>
+                  </>
+                )}
               </span>
             </div>
             <span className={`tx-row__amount amount--${t.type}`}>
               <span className="sr-only">{t.type === 'income' ? 'Entrada de' : 'Despesa de'}</span>
-              {sign} {formatMoney(t.amount, settings.primaryCurrency)}
+              {sign} {formatMoney(t.amount, cur(t))}
             </span>
             {showActions && (
               <div className="tx-row__actions">

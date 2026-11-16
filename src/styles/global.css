@@ -1601,6 +1601,8 @@ input[type='range'] {
   inset: 0;
   z-index: 60;
   display: grid;
+  /* A coluna nunca passa da largura da tela (evita zoom no celular com conteúdo largo). */
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 16px;
   background: rgba(10, 22, 40, 0.32);
@@ -2225,6 +2227,454 @@ input[type='range'] {
   color: var(--text-on-accent);
   background: linear-gradient(140deg, var(--cream), var(--orange-2));
   box-shadow: 0 8px 20px -8px rgba(238, 132, 52, 0.6);
+}
+
+/* ------------------------------------------------------------------ Contas e resultado mensal */
+
+.row.center {
+  justify-content: center;
+}
+
+/* Valor animado: contagem curta + leve brilho quando muda */
+.money-anim {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+.money-anim[data-pulse] {
+  animation: moneyPulse 0.7s var(--ease);
+}
+@keyframes moneyPulse {
+  0% {
+    opacity: 0.55;
+    transform: translateY(3px);
+    text-shadow: 0 0 0 transparent;
+  }
+  45% {
+    opacity: 1;
+    transform: none;
+    text-shadow: 0 0 18px var(--accent-soft);
+  }
+  100% {
+    text-shadow: 0 0 0 transparent;
+  }
+}
+
+/* Barra de filtros do dashboard */
+.dash-toolbar {
+  margin-bottom: 18px;
+  gap: 10px 22px;
+}
+.dash-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.dash-toolbar__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.dash-toolbar__value {
+  font-weight: 600;
+}
+.dash-toolbar .input--sm {
+  width: auto;
+}
+.month-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.month-picker .input {
+  width: auto;
+}
+.month-picker__month {
+  min-width: 128px;
+}
+.month-picker__year {
+  min-width: 88px;
+}
+
+/* Indicadores do mês */
+.hero-note {
+  max-width: 46ch;
+}
+.stat-card--income {
+  background: linear-gradient(150deg, var(--glass-bg), rgba(18, 114, 62, 0.08));
+}
+.stat-card--expense {
+  background: linear-gradient(150deg, var(--glass-bg), rgba(179, 38, 30, 0.07));
+}
+.stat-card--net.is-positive {
+  background: linear-gradient(150deg, var(--glass-bg), rgba(18, 114, 62, 0.1));
+}
+.stat-card--net.is-negative {
+  background: linear-gradient(150deg, var(--glass-bg), rgba(179, 38, 30, 0.09));
+}
+.stat-card--income .card__icon,
+.stat-card--net.is-positive .card__icon {
+  background: var(--good-bg);
+  color: var(--good);
+}
+.stat-card--expense .card__icon,
+.stat-card--net.is-negative .card__icon {
+  background: var(--critical-bg);
+  color: var(--critical);
+}
+.amount--transfer {
+  color: var(--accent);
+}
+
+/* Ícone de conta: selo redondo com gradiente da cor escolhida */
+.acc-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  color: #fff;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.45), transparent 55%),
+    linear-gradient(145deg, var(--acc-color, var(--accent)), color-mix(in srgb, var(--acc-color, var(--accent)) 70%, #0b2a4d));
+  box-shadow:
+    0 6px 14px -6px color-mix(in srgb, var(--acc-color, var(--accent)) 70%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.card__icon .acc-icon {
+  width: 30px !important;
+  height: 30px !important;
+}
+.acc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.acc-chip::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--acc-color, var(--accent));
+}
+
+/* Minhas Contas */
+.accounts-card {
+  gap: 16px;
+  background: linear-gradient(150deg, var(--glass-bg), rgba(42, 120, 214, 0.1));
+}
+.acc-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.acc-total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+.acc-total--main {
+  background: linear-gradient(140deg, rgba(42, 120, 214, 0.2), rgba(79, 155, 232, 0.08));
+}
+.acc-total__label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.acc-total__value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.acc-total--main .acc-total__value {
+  color: var(--accent);
+}
+.acc-tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+.acc-tile {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border);
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--acc-color, var(--accent)) 14%, transparent), transparent 70%),
+    var(--glass-bg);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 6px 18px -12px rgba(28, 56, 96, 0.3);
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease),
+    border-color 0.25s;
+}
+.acc-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px -14px rgba(28, 56, 96, 0.38);
+}
+.acc-tile.is-selected {
+  border-color: var(--acc-color, var(--accent));
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--acc-color, var(--accent)) 45%, transparent),
+    0 12px 26px -14px rgba(28, 56, 96, 0.38);
+}
+.acc-tile--all {
+  background: linear-gradient(150deg, rgba(42, 120, 214, 0.18), rgba(79, 155, 232, 0.06)), var(--glass-bg);
+}
+.acc-tile__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+.acc-tile__name {
+  min-width: 0;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.acc-tile__value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.acc-tile__value.is-negative,
+.account-card__balance.is-negative {
+  color: var(--expense);
+}
+.acc-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Formulário de conta */
+.acc-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--glass-bg);
+}
+.acc-preview > div {
+  display: flex;
+  flex-direction: column;
+}
+.choice-group {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.swatches,
+.icon-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 6px rgba(28, 56, 96, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s var(--ease);
+}
+.swatch:hover {
+  transform: scale(1.08);
+}
+.swatch.is-selected {
+  box-shadow:
+    0 0 0 2px var(--text-primary),
+    0 2px 6px rgba(28, 56, 96, 0.2);
+}
+.icon-choice {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s var(--ease);
+}
+.icon-choice:hover {
+  transform: translateY(-1px);
+}
+.icon-choice.is-selected {
+  background: linear-gradient(145deg, var(--orange-1), var(--orange-2));
+  color: var(--text-on-accent);
+  border-color: transparent;
+}
+.swatch:focus-within,
+.icon-choice:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.transfer-arrow {
+  display: grid;
+  place-items: center;
+  margin: -6px 0;
+  color: var(--accent);
+}
+
+/* Página Contas */
+.account-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+.account-card {
+  gap: 8px;
+  height: 100%;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--acc-color, var(--accent)) 16%, transparent), transparent 65%),
+    var(--glass-bg);
+}
+.account-card.is-selected {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--acc-color, var(--accent)) 50%, transparent),
+    var(--glass-shadow);
+}
+.account-card.is-archived {
+  opacity: 0.75;
+}
+.account-card__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+.account-card__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.account-card__name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-card__balance {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.account-card__actions {
+  display: flex;
+  gap: 4px;
+  margin-top: auto;
+}
+.archived-block > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 6px 2px 12px;
+}
+.history-kind {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+}
+.history-kind--income {
+  background: var(--good-bg);
+  color: var(--good);
+}
+.history-kind--expense {
+  background: var(--critical-bg);
+  color: var(--critical);
+}
+.history-kind--transfer-in,
+.history-kind--transfer-out {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.history-amounts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+@media (max-width: 1024px) {
+  .acc-totals {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .dash-toolbar,
+  .dash-toolbar__group {
+    align-items: stretch;
+  }
+  .dash-toolbar__group {
+    width: 100%;
+  }
+  .dash-toolbar__group .input--sm:not(.month-picker__month):not(.month-picker__year) {
+    width: 100%;
+  }
+  .month-picker__month {
+    flex: 1;
+    min-width: 0;
+  }
+  .acc-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .acc-tile {
+    padding: 12px;
+  }
+  .acc-tile__value {
+    font-size: 1.05rem;
+  }
+  .history-amounts .small {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .money-anim[data-pulse] {
+    animation: none;
+  }
 }
 
 /* ------------------------------------------------------------------ Responsivo */

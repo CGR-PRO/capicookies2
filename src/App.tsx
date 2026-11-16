@@ -15,6 +15,7 @@ const Entradas = lazy(() => import('./pages/Entradas'));
 const Despesas = lazy(() => import('./pages/Despesas'));
 const GastosFixos = lazy(() => import('./pages/GastosFixos'));
 const Historico = lazy(() => import('./pages/Historico'));
+const Contas = lazy(() => import('./pages/Contas'));
 const Conversor = lazy(() => import('./pages/Conversor'));
 const Configuracoes = lazy(() => import('./pages/Configuracoes'));
 
@@ -49,6 +50,7 @@ function Gate() {
               <Route path="despesas" element={<Despesas />} />
               <Route path="gastos-fixos" element={<GastosFixos />} />
               <Route path="historico" element={<Historico />} />
+              <Route path="contas" element={<Contas />} />
               <Route path="conversor" element={<Conversor />} />
               <Route path="configuracoes" element={<Configuracoes />} />
               <Route path="*" element={<Navigate to="/" replace />} />

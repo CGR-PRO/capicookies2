@@ -10,10 +10,49 @@ export interface Category {
   createdAt: string;
 }
 
+/** Conta financeira manual (sem integração bancária). */
+export interface Account {
+  id: string;
+  name: string;
+  /** Saldo inicial em centavos da moeda da conta (pode ser negativo). */
+  initialBalance: number;
+  currency: string;
+  color: string;
+  /** Nome do ícone (ver ACCOUNT_ICONS). */
+  icon: string;
+  /** A conta principal existe sempre e não pode ser arquivada nem excluída. */
+  isPrimary: boolean;
+  archived: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Transferência interna entre contas. Não é entrada nem despesa: só movimenta
+ * dinheiro entre contas, portanto não entra no resultado mensal.
+ */
+export interface Transfer {
+  id: string;
+  fromAccountId: string;
+  toAccountId: string;
+  /** Valor que sai da conta de origem, em centavos da moeda de origem. */
+  amount: number;
+  /** Valor que chega na conta de destino, em centavos da moeda de destino (igual a `amount` se a moeda for a mesma). */
+  toAmount: number;
+  date: string;
+  description: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Transaction {
   id: string;
   type: TxType;
-  /** Valor positivo em centavos da moeda principal. */
+  /** Conta afetada pelo lançamento. */
+  accountId: string;
+  /** Valor positivo em centavos da moeda da conta. */
   amount: number;
   description: string;
   categoryId: string | null;
@@ -38,6 +77,8 @@ export interface RecurringExpense {
   /** Primeira data de vencimento (YYYY-MM-DD). */
   firstDue: string;
   frequency: Frequency;
+  /** Conta usada para pagar (padrão: conta principal). */
+  accountId?: string;
   /** Data final opcional (YYYY-MM-DD). */
   endDate?: string;
   active: boolean;
@@ -98,6 +139,7 @@ export interface BackgroundSettings {
 export type ThemePref = 'light' | 'dark' | 'system';
 
 export interface Settings {
+  /** Legado (v1): saldo inicial antes das contas. Migrado para a conta principal. */
   initialBalance: number;
   primaryCurrency: string;
   secondaryCurrency: string;
