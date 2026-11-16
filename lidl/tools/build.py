@@ -36,7 +36,8 @@ def groups_from(words, breaks):
     out = []
     for g in groups:
         if out and len(g) == 1 and len(out[-1]) <= 4 and g[0][1][1] - out[-1][-1][1][2] < 0.35 \
-                and g[0][0] not in brk:
+                and g[0][0] not in brk \
+                and not out[-1][-1][1][0].endswith((".", "!", "?", ",", "...")):
             out[-1] = out[-1] + g
         else:
             out.append(g)
