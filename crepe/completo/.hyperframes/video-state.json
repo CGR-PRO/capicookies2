@@ -307,5 +307,16 @@
         "attribution": "unversioned"
       }
     ]
-  }
+  },
+  "renders": {
+    "latest": {
+      "id": "b6a00dc0-6e6d-43d5-a797-b06e85d53547",
+      "completedAt": 1795128020507,
+      "output": "/home/user/capicookies2/crepe/renders/crepe_raw.mp4",
+      "status": "completed",
+      "revision": null
+    },
+    "retainedRevisions": []
+  },
+  "pendingArtifactCleanup": []
 }
