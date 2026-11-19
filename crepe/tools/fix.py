@@ -15,7 +15,7 @@ def retime(raw, segs):
 r1=json.load(open(f'{A}/fala1.mp4.large.json')); r2=json.load(open(f'{A}/parte2.mp4.large.json'))
 print(r2)
 w1=retime(r1,[(0,2.4,"Agora a gente vai comer aqui no Gino's Gelato, no crepe."),
-              (5.6,7.5,"Aqui tem sempre porteiros do gás.")])
+              (5.6,7.5,"O Arthur sempre é meu porteiro.")])
 w2=retime(r2,[(0,4.84,"Hum! Nossa, muito bom! Muito bom, hein?"),(5.08,5.64,"Muito bom!")])
 d1=87.8; d2=9.17
 json.dump({"duration":round(d1+d2,3),"words":w1+[[t,s+d1,e+d1] for t,s,e in w2],"prices":[],
